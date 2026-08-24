@@ -23,7 +23,74 @@
             display: flex; align-items: center; justify-content: center;
             position: relative;
         }
-        #pagCanvas { max-width: 100%; max-height: 100%; }
+
+        /* Background layer */
+        #bgLayer {
+            position: absolute; inset: 0; z-index: 0;
+        }
+        /* Checkerboard pattern (like LottieFilesViewer) */
+        #bgLayer.checker {
+            background-color: #ffffff;
+            background-image:
+                linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+                linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+                linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+        }
+        #bgLayer.checker.dark {
+            background-color: #2a2a2a;
+            background-image:
+                linear-gradient(45deg, #333 25%, transparent 25%),
+                linear-gradient(-45deg, #333 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #333 75%),
+                linear-gradient(-45deg, transparent 75%, #333 75%);
+        }
+        #bgLayer.white { background: #ffffff; }
+        #bgLayer.black { background: #000000; }
+        #bgLayer.default { background: var(--bg); }
+
+        #pagCanvas { max-width: 100%; max-height: 100%; position: relative; z-index: 1; }
+
+        /* Top-right toolbar (like LottieFilesViewer) */
+        #topBar {
+            position: absolute; top: 8px; right: 8px;
+            display: flex; gap: 4px;
+            z-index: 20;
+            opacity: 1; transition: opacity 0.3s;
+        }
+        #topBar.hidden { opacity: 0; pointer-events: none; }
+        #topBar .btn {
+            width: 24px; height: 24px;
+            background: transparent; border: none; color: var(--fg);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            border-radius: 2px; transition: background 0.1s;
+        }
+        #topBar .btn:hover { background: rgba(255,255,255,0.1); }
+        #topBar .btn .icon { font-size: 12px; }
+
+        /* Color picker popup */
+        #colorPicker {
+            position: absolute; top: 36px; right: 8px;
+            background: var(--control-bg);
+            padding: 8px; border-radius: 4px;
+            display: none; z-index: 21;
+            flex-direction: column; gap: 6px;
+        }
+        #colorPicker.show { display: flex; }
+        #colorPicker input[type="color"] {
+            width: 100%; height: 28px; border: none;
+            cursor: pointer; background: transparent;
+        }
+        .colorSwatches {
+            display: flex; gap: 4px;
+        }
+        .swatch {
+            width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer; border-radius: 2px;
+        }
+        .swatch:hover { border-color: var(--fg); }
 
         /* Control bar */
         #controls {
@@ -32,8 +99,7 @@
             background: var(--control-bg);
             display: flex; align-items: center;
             padding: 0 8px;
-            opacity: 1;
-            transition: opacity 0.3s ease;
+            opacity: 1; transition: opacity 0.3s ease;
             z-index: 10;
         }
         #controls.hidden { opacity: 0; pointer-events: none; }
@@ -42,8 +108,7 @@
             background: transparent; border: none; color: var(--fg);
             width: 32px; height: 32px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 2px;
-            transition: background 0.1s;
+            border-radius: 2px; transition: background 0.1s;
             flex-shrink: 0;
         }
         .btn:hover { background: rgba(255,255,255,0.08); }
@@ -87,15 +152,14 @@
             flex-shrink: 0; white-space: nowrap;
         }
 
-        /* Volume slider popup (like VideoViewer volumeSliderLayer) */
+        /* Volume slider */
         #volumeLayer {
             position: absolute; bottom: 32px; right: 8px;
             width: 130px; height: 32px;
             background: var(--control-bg);
             display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.15s;
-            z-index: 11;
+            transition: opacity 0.15s; z-index: 11;
         }
         #volumeLayer.show { opacity: 1; pointer-events: auto; }
         #volumeSlider {
@@ -109,28 +173,45 @@
             background: var(--fg); border-radius: 50%; cursor: pointer;
         }
 
-        /* Status */
         #status {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            color: var(--fg-alt); font-size: 13px;
+            color: var(--fg-alt); font-size: 13px; z-index: 1;
         }
 
-        /* Info overlay */
         #info {
-            position: absolute; top: 8px; right: 8px;
+            position: absolute; top: 8px; left: 8px;
             color: var(--fg-alt); font-size: 11px;
             font-family: 'Segoe UI', sans-serif;
             pointer-events: none; opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s; z-index: 2;
         }
         #info.show { opacity: 1; }
     </style>
 </head>
 <body>
     <div id="container">
+        <div id="bgLayer" class="default"></div>
         <canvas id="pagCanvas"></canvas>
         <div id="info"></div>
+
+        <!-- Top-right toolbar (like LottieFilesViewer buttonBackgroundColour) -->
+        <div id="topBar">
+            <!-- \xEF1F = BackgroundToggle -->
+            <button class="btn" id="btnBg" title="Background">
+                <span class="icon">&#xEF1F;</span>
+            </button>
+        </div>
+        <div id="colorPicker">
+            <div class="colorSwatches">
+                <div class="swatch" data-bg="default" style="background:var(--bg)" title="Default"></div>
+                <div class="swatch" data-bg="checker" style="background:repeating-conic-gradient(#e0e0e0 0% 25%, #fff 0% 50%) 50%/8px 8px" title="Checkerboard"></div>
+                <div class="swatch" data-bg="white" style="background:#fff" title="White"></div>
+                <div class="swatch" data-bg="black" style="background:#000" title="Black"></div>
+            </div>
+            <input type="color" id="customColor" value="#202020" title="Custom color">
+        </div>
+
         <div id="controls">
             <button class="btn" id="btnPlayPause" title="Play / Pause">
                 <span class="icon">&#xE768;</span>
@@ -144,7 +225,6 @@
                 <div id="progressThumb"></div>
             </div>
             <span id="time">00:00 / 00:00</span>
-            <!-- Volume: \xE767=Volume3 \xE994=Volume2 \xE993=Volume1 \xE74F=Mute -->
             <button class="btn" id="btnMute" title="Volume">
                 <span class="icon" id="volumeIcon">&#xE767;</span>
             </button>
@@ -159,10 +239,15 @@
     (function() {
         var statusEl = document.getElementById('status');
         var canvas = document.getElementById('pagCanvas');
+        var bgLayer = document.getElementById('bgLayer');
         var controls = document.getElementById('controls');
+        var topBar = document.getElementById('topBar');
         var btnPlay = document.getElementById('btnPlayPause');
         var btnLoop = document.getElementById('btnLoop');
         var btnMute = document.getElementById('btnMute');
+        var btnBg = document.getElementById('btnBg');
+        var colorPicker = document.getElementById('colorPicker');
+        var customColor = document.getElementById('customColor');
         var volumeIcon = document.getElementById('volumeIcon');
         var volumeLayer = document.getElementById('volumeLayer');
         var volumeSlider = document.getElementById('volumeSlider');
@@ -188,17 +273,91 @@
         var ICON_VOL1 = '\uE993';
         var ICON_VOL0 = '\uE74F';
 
+        // --- Background switcher ---
+        var BG_MODES = ['default', 'checker', 'white', 'black'];
+        var bgIndex = parseInt(localStorage.getItem('pag-bg-index') || '0');
+        var customBgColor = localStorage.getItem('pag-bg-custom') || '#202020';
+
+        function applyBg() {
+            var mode = BG_MODES[bgIndex];
+            bgLayer.className = mode;
+            if (mode === 'checker') {
+                // Detect if theme is dark
+                var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+                if (bg === '#202020' || bg === '#1a1a1a') bgLayer.classList.add('dark');
+            }
+            if (mode === 'default') {
+                bgLayer.style.background = '';
+            } else if (mode === 'checker') {
+                bgLayer.style.background = '';
+            } else {
+                bgLayer.style.background = mode;
+            }
+            customColor.value = customBgColor;
+            localStorage.setItem('pag-bg-index', bgIndex);
+        }
+
+        function cycleBg() {
+            bgIndex = (bgIndex + 1) % BG_MODES.length;
+            applyBg();
+        }
+
+        // Swatch clicks
+        document.querySelectorAll('.swatch').forEach(function(el) {
+            el.addEventListener('click', function() {
+                bgIndex = BG_MODES.indexOf(el.dataset.bg);
+                applyBg();
+                colorPicker.classList.remove('show');
+            });
+        });
+
+        // Custom color picker
+        customColor.addEventListener('input', function() {
+            customBgColor = customColor.value;
+            bgLayer.className = '';
+            bgLayer.style.background = customBgColor;
+            localStorage.setItem('pag-bg-custom', customBgColor);
+            bgIndex = -1;
+            localStorage.setItem('pag-bg-index', '-1');
+        });
+
+        // Background button: click = cycle, right-click = show picker
+        btnBg.addEventListener('click', function(e) {
+            cycleBg();
+        });
+        btnBg.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            colorPicker.classList.toggle('show');
+        });
+        // Close picker on outside click
+        document.addEventListener('click', function(e) {
+            if (!colorPicker.contains(e.target) && e.target !== btnBg && !btnBg.contains(e.target)) {
+                colorPicker.classList.remove('show');
+            }
+        });
+
+        // Restore saved background
+        if (bgIndex < 0) {
+            bgLayer.className = '';
+            bgLayer.style.background = customBgColor;
+        } else {
+            applyBg();
+        }
+
         // --- Auto-hide ---
         function showControls() {
             controls.classList.remove('hidden');
+            topBar.classList.remove('hidden');
             infoEl.classList.add('show');
             resetHideTimer();
         }
         function hideControls() {
             if (isDragging) return;
             controls.classList.add('hidden');
+            topBar.classList.add('hidden');
             infoEl.classList.remove('show');
             volumeLayer.classList.remove('show');
+            colorPicker.classList.remove('show');
         }
         function resetHideTimer() {
             if (hideTimer) clearTimeout(hideTimer);
@@ -207,7 +366,7 @@
         document.addEventListener('mousemove', showControls);
         document.addEventListener('mousedown', showControls);
 
-        // --- Time format ---
+        // --- Time ---
         function fmt(us) {
             var s = us / 1000000;
             var m = Math.floor(s / 60);
@@ -233,30 +392,17 @@
         function applyVolume() {
             var v = isMuted ? 0 : volume;
             volumeSlider.value = Math.round(v * 100);
-            if (pagView && typeof pagView.setVolume === 'function') {
-                pagView.setVolume(v);
-            }
+            if (pagView && typeof pagView.setVolume === 'function') pagView.setVolume(v);
             updateVolumeIcon();
         }
 
-        btnMute.addEventListener('click', function() {
-            isMuted = !isMuted;
-            applyVolume();
-        });
+        btnMute.addEventListener('click', function() { isMuted = !isMuted; applyVolume(); });
+        volumeSlider.addEventListener('input', function() { volume = volumeSlider.value / 100; isMuted = false; applyVolume(); });
 
-        volumeSlider.addEventListener('input', function() {
-            volume = volumeSlider.value / 100;
-            isMuted = false;
-            applyVolume();
-        });
-
-        // Mouse wheel volume control (like VideoViewer)
         document.addEventListener('wheel', function(e) {
             if (e.deltaY < 0) volume = Math.min(1, volume + 0.04);
             else volume = Math.max(0, volume - 0.04);
-            isMuted = false;
-            applyVolume();
-            showControls();
+            isMuted = false; applyVolume(); showControls();
             volumeLayer.classList.add('show');
             clearTimeout(hideTimer);
             hideTimer = setTimeout(function() { volumeLayer.classList.remove('show'); }, 1500);
@@ -275,7 +421,6 @@
                     pag = await window.libpag.PAGInit({locateFile:function(){return wasmSrc}});
                     log('PAG initialized');
                 }
-
                 if (pagView) { try{pagView.destroy();}catch(e){} pagView=null; }
                 if (pagFile) { try{pagFile.destroy();}catch(e){} pagFile=null; }
 
@@ -284,7 +429,6 @@
                 var buf = new Uint8Array(raw.length);
                 for (var i=0;i<raw.length;i++) buf[i]=raw.charCodeAt(i);
                 var ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset+buf.byteLength);
-
                 pagFile = await pag.PAGFile.load(ab);
                 if (!pagFile) { statusEl.textContent='Invalid PAG file'; return; }
 
@@ -295,23 +439,18 @@
 
                 pagView = await pag.PAGView.init(pagFile, canvas, {useScale:false});
                 if (!pagView) { statusEl.textContent='Failed to create view'; return; }
-
                 pagView.setRepeatCount(0);
                 applyVolume();
 
                 pagView.addListener('onAnimationUpdate', function() {
-                    if (!isDragging && pagView) {
-                        updateProgress(pagView.getProgress());
-                    }
+                    if (!isDragging && pagView) updateProgress(pagView.getProgress());
                 });
-
                 pagView.addListener('onAnimationEnd', function() {
                     if (!isLooping) { isPlaying=false; updatePlayBtn(); }
                 });
 
                 await pagView.play();
-                isPlaying = true;
-                updatePlayBtn();
+                isPlaying = true; updatePlayBtn();
                 statusEl.style.display = 'none';
                 log('Playing');
 
@@ -336,36 +475,26 @@
             btnPlay.querySelector('.icon').textContent = isPlaying ? ICON_PAUSE : ICON_PLAY;
         }
 
-        // --- Progress interaction ---
+        // --- Progress ---
         function getProgressFromEvent(e) {
             var rect = progressWrap.getBoundingClientRect();
             return Math.max(0, Math.min(1, (e.clientX - rect.left - 10) / (rect.width - 20)));
         }
 
         progressWrap.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            progressWrap.classList.add('dragging');
-            var p = getProgressFromEvent(e);
-            updateProgress(p);
+            isDragging = true; progressWrap.classList.add('dragging');
+            var p = getProgressFromEvent(e); updateProgress(p);
             if (pagView) pagView.setProgress(p);
         });
         document.addEventListener('mousemove', function(e) {
-            if (isDragging) {
-                var p = getProgressFromEvent(e);
-                updateProgress(p);
-                if (pagView) pagView.setProgress(p);
-            }
+            if (isDragging) { var p = getProgressFromEvent(e); updateProgress(p); if (pagView) pagView.setProgress(p); }
         });
-        document.addEventListener('mouseup', function() {
-            isDragging = false;
-            progressWrap.classList.remove('dragging');
-        });
+        document.addEventListener('mouseup', function() { isDragging = false; progressWrap.classList.remove('dragging'); });
 
         // --- Buttons ---
         btnPlay.addEventListener('click', function() {
             if (!pagView) return;
-            if (isPlaying) { pagView.pause(); isPlaying=false; }
-            else { pagView.play(); isPlaying=true; }
+            if (isPlaying) { pagView.pause(); isPlaying=false; } else { pagView.play(); isPlaying=true; }
             updatePlayBtn();
         });
 
