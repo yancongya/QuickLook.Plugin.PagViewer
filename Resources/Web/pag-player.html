@@ -667,11 +667,19 @@
                 canvas.width = pagWidth; canvas.height = pagHeight;
 
                 // Collect metadata
+                var fileProps = Object.getOwnPropertyNames(Object.getPrototypeOf(pagFile)).filter(function(k) { return typeof pagFile[k] === 'function'; });
+                log('PAGFile methods: ' + fileProps.join(', '));
+                
                 pagMeta = {
-                    fps: typeof pagFile.fps === 'function' ? pagFile.fps() : 30,
-                    numLayers: typeof pagFile.numLayers === 'function' ? pagFile.numLayers() : (typeof pagFile.numChildren === 'function' ? pagFile.numChildren() : null),
-                    numImages: typeof pagFile.numImages === 'function' ? pagFile.numImages() : null,
-                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : null
+                    fps: typeof pagFile.fps === 'function' ? pagFile.fps() : 
+                         (typeof pagFile.frameRate === 'function' ? pagFile.frameRate() : 30),
+                    numLayers: typeof pagFile.numLayers === 'function' ? pagFile.numLayers() : 
+                               (typeof pagFile.numChildren === 'function' ? pagFile.numChildren() : 
+                               (typeof pagFile.layerCount === 'function' ? pagFile.layerCount() : null)),
+                    numImages: typeof pagFile.numImages === 'function' ? pagFile.numImages() : 
+                               (typeof pagFile.imageCount === 'function' ? pagFile.imageCount() : null),
+                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : 
+                              (typeof pagFile.textCount === 'function' ? pagFile.textCount() : null)
                 };
                 log('Meta: ' + JSON.stringify(pagMeta));
 
