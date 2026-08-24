@@ -216,6 +216,20 @@
             opacity: 0; z-index: 30; transition: opacity 0.3s;
         }
         #toast.show { opacity: 1; }
+
+        /* Performance OSD overlay */
+        #perfOverlay {
+            position: absolute; bottom: 44px; left: 8px;
+            z-index: 15; cursor: move;
+            opacity: 1; transition: opacity 0.3s;
+            pointer-events: auto;
+        }
+        #perfOverlay.hidden { opacity: 0; pointer-events: none; }
+        #perfOverlay canvas {
+            display: block;
+            background: rgba(0,0,0,0.6);
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -227,6 +241,11 @@
         <div id="zoomInfo"></div>
         <div id="info"></div>
         <div id="toast"></div>
+
+        <!-- Performance OSD overlay -->
+        <div id="perfOverlay">
+            <canvas id="perfCanvas" width="200" height="60"></canvas>
+        </div>
 
         <!-- Top-right toolbar -->
         <div id="topBar">
@@ -241,6 +260,10 @@
             <!-- \xEF1F = BackgroundToggle -->
             <button class="btn" id="btnBg" title="切换背景">
                 <span class="icon">&#xEF1F;</span>
+            </button>
+            <!-- \xE9F9 = Performance -->
+            <button class="btn active" id="btnPerf" title="性能监控">
+                <span class="icon">&#xE9F9;</span>
             </button>
         </div>
         <div id="metaPanel"></div>
@@ -355,6 +378,7 @@
             btnMeta.title = T('BTN_Meta');
             btnSave.title = T('BTN_Save');
             btnBg.title = T('BTN_Background');
+            btnPerf.title = T('BTN_Perf');
             document.querySelector('.swatch[data-bg="default"]').title = T('BG_Default');
             document.querySelector('.swatch[data-bg="checker"]').title = T('BG_Checker');
             document.querySelector('.swatch[data-bg="white"]').title = T('BG_White');
@@ -375,6 +399,106 @@
         var ICON_VOL2 = '\uE994';
         var ICON_VOL1 = '\uE993';
         var ICON_VOL0 = '\uE74F';
+
+        // --- Performance overlay ---
+        var perfOverlay = document.getElementById('perfOverlay');
+        var perfCanvas = document.getElementById('perfCanvas');
+        var btnPerf = document.getElementById('btnPerf');
+        var fpsHistory = [];
+        var flushHistory = [];
+        var perfVisible = localStorage.getItem('pag-perf-visible') !== '0';
+        var perfDrag = { active: false, startX: 0, startY: 0, origX: 0, origY: 0 };
+
+        // Restore position
+        var savedPerfPos = localStorage.getItem('pag-perf-pos');
+        if (savedPerfPos) {
+            try {
+                var pos = JSON.parse(savedPerfPos);
+                if (pos.left) { perfOverlay.style.left = pos.left; perfOverlay.style.bottom = 'auto'; }
+                if (pos.top) perfOverlay.style.top = pos.top;
+            } catch(e) {}
+        }
+
+        function drawPerfGraph() {
+            var ctx = perfCanvas.getContext('2d');
+            var W = perfCanvas.width, H = perfCanvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); // 30fps line
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Flush time line (blue)
+            drawPerfLine(ctx, flushHistory, 33, function() { return '#2196F3'; }, W, H);
+
+            // FPS line (green/yellow/red)
+            drawPerfLine(ctx, fpsHistory, 60, function(fps) {
+                if (fps >= 50) return '#4CAF50';
+                if (fps >= 30) return '#FFC107';
+                return '#F44336';
+            }, W, H);
+        }
+
+        function drawPerfLine(ctx, data, maxVal, colorFn, W, H) {
+            if (data.length < 2) return;
+            var step = W / 120;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (var i = 0; i < data.length; i++) {
+                var x = i * step;
+                var y = H - (data[i] / maxVal) * H;
+                y = Math.max(0, Math.min(H, y));
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = colorFn(data[data.length - 1]);
+            ctx.stroke();
+        }
+
+        // Perf toggle
+        if (!perfVisible) { perfOverlay.classList.add('hidden'); }
+        else { btnPerf.classList.add('active'); }
+
+        btnPerf.addEventListener('click', function() {
+            perfVisible = !perfVisible;
+            perfOverlay.classList.toggle('hidden', !perfVisible);
+            btnPerf.classList.toggle('active', perfVisible);
+            localStorage.setItem('pag-perf-visible', perfVisible ? '1' : '0');
+            if (perfVisible) drawPerfGraph();
+        });
+
+        // Perf drag
+        perfOverlay.addEventListener('mousedown', function(e) {
+            perfDrag.active = true;
+            perfDrag.startX = e.clientX;
+            perfDrag.startY = e.clientY;
+            var rect = perfOverlay.getBoundingClientRect();
+            perfDrag.origX = rect.left;
+            perfDrag.origY = rect.top;
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!perfDrag.active) return;
+            var dx = e.clientX - perfDrag.startX;
+            var dy = e.clientY - perfDrag.startY;
+            perfOverlay.style.left = (perfDrag.origX + dx) + 'px';
+            perfOverlay.style.top = (perfDrag.origY + dy) + 'px';
+            perfOverlay.style.bottom = 'auto';
+        });
+        document.addEventListener('mouseup', function() {
+            if (perfDrag.active) {
+                perfDrag.active = false;
+                localStorage.setItem('pag-perf-pos', JSON.stringify({
+                    left: perfOverlay.style.left,
+                    top: perfOverlay.style.top
+                }));
+            }
+        });
 
         // --- Toast ---
         var toastTimer = null;
@@ -513,16 +637,18 @@
             controls.classList.remove('hidden');
             topBar.classList.remove('hidden');
             infoEl.classList.add('show');
+            if (perfVisible) perfOverlay.classList.remove('hidden');
             resetHideTimer();
         }
         function hideControls() {
-            if (isDragging) return;
+            if (isDragging || perfDrag.active) return;
             controls.classList.add('hidden');
             topBar.classList.add('hidden');
             infoEl.classList.remove('show');
             volumeLayer.classList.remove('show');
             colorPicker.classList.remove('show');
             metaPanel.classList.remove('show');
+            perfOverlay.classList.add('hidden');
         }
         function resetHideTimer() {
             if (hideTimer) clearTimeout(hideTimer);
@@ -698,6 +824,15 @@
 
                 pagView.addListener('onAnimationUpdate', function() {
                     if (!isDragging && pagView) updateProgress(pagView.getProgress());
+                    // Collect perf data
+                    if (perfVisible && typeof pagView.getDebugData === 'function') {
+                        var debug = pagView.getDebugData();
+                        fpsHistory.push(debug.FPS || 0);
+                        flushHistory.push(debug.flushTime || 0);
+                        if (fpsHistory.length > 120) fpsHistory.shift();
+                        if (flushHistory.length > 120) flushHistory.shift();
+                        drawPerfGraph();
+                    }
                 });
                 pagView.addListener('onAnimationEnd', function() {
                     if (!isLooping) { isPlaying=false; updatePlayBtn(); }
