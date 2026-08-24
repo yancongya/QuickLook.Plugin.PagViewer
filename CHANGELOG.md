@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.0] - 2026-08-24
+
+### Added
+- Performance monitoring: FPS display in top-left corner with color coding
+- Progress bar color changes based on render pressure (green/yellow/red)
+- Sample PAG files for testing (from Tencent/libpag official assets)
+- Issue templates (bug report, feature request)
+- Pull request template
+- Version management script (update-version.ps1)
+
+### Changed
+- Simplified performance display (removed OSD overlay)
+- FPS shown below dimensions info (green ≥50, yellow ≥30, red <30)
+- Progress bar color reflects flushTime (green ≤10ms, yellow ≤20ms, red >20ms)
+
+### Fixed
+- btnPerf declaration order causing applyI18n error
+- i18n default translations fallback
+
 ## [1.1.0] - 2026-08-24
 
 ### Added

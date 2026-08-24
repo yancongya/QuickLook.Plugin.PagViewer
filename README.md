@@ -21,6 +21,7 @@ PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频�
 - 画布拖拽（左键长按）
 - 背景切换（默认/棋盘格/白色/黑色/自定义颜色）
 - 文件信息面板（悬停显示尺寸、时长、帧率、图层数等）
+- 性能监控（FPS 显示 + 进度条颜色反映渲染压力）
 - 保存为 PNG（保存到 PAG 文件旁边）
 - 复制文件到剪贴板
 - 窗口拖拽（点击背景区域）
@@ -109,6 +110,7 @@ PAG is an open-source cross-platform animation format by Tencent, widely used in
 - Canvas pan (left-click drag)
 - Background switcher (Default / Checkerboard / White / Black / Custom color)
 - File info panel (hover to show dimensions, duration, FPS, layers, etc.)
+- Performance monitoring (FPS display + progress bar color reflects render pressure)
 - Save as PNG (saves next to PAG file)
 - Copy file to clipboard
 - Window drag (click background area)
