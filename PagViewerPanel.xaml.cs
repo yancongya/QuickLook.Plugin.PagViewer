@@ -174,14 +174,18 @@ namespace QuickLook.Plugin.PagViewer
             try
             {
                 var bytes = Convert.FromBase64String(base64);
-                var tempFile = Path.Combine(Path.GetTempPath(), "pag-clipboard-" + DateTime.Now.Ticks + ".png");
-                File.WriteAllBytes(tempFile, bytes);
+                var pagDir = Path.GetDirectoryName(_pagFilePath) ?? "";
+                var baseName = Path.GetFileNameWithoutExtension(_pagFilePath);
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var savePath = Path.Combine(pagDir, $"{baseName}_{timestamp}.png");
+
+                File.WriteAllBytes(savePath, bytes);
 
                 Dispatcher.Invoke(() =>
                 {
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(tempFile);
+                    bitmap.UriSource = new Uri(savePath);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
                     bitmap.Freeze();
