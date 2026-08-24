@@ -83,6 +83,7 @@ powershell -ExecutionPolicy Bypass -File Scripts/build.ps1
 │   ├── libpag.min.js              # PAG Web SDK
 │   ├── libpag.wasm                # PAG WebAssembly 引擎
 │   └── pag-player.html            # 播放器 UI
+├── Samples/                       # 测试用 PAG 示例文件
 ├── Translations.config            # 中英文翻译
 ├── Properties/
 ├── Scripts/
@@ -170,6 +171,7 @@ powershell -ExecutionPolicy Bypass -File Scripts/build.ps1
 │   ├── libpag.min.js              # PAG Web SDK
 │   ├── libpag.wasm                # PAG WebAssembly engine
 │   └── pag-player.html            # Player UI
+├── Samples/                       # Sample PAG files for testing
 ├── Translations.config            # i18n translations
 ├── Properties/
 ├── Scripts/
