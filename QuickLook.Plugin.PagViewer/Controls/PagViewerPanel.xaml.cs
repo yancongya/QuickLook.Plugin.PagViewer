@@ -234,8 +234,11 @@ namespace QuickLook.Plugin.PagViewer.Controls
         {
             if (_webView != null)
             {
-                _webView.CoreWebView2.WebMessageReceived -= OnWebMessageReceived;
-                _webView.CoreWebView2.NavigationStarting -= OnNavigationStarting;
+                if (_webView.CoreWebView2 != null)
+                {
+                    _webView.CoreWebView2.WebMessageReceived -= OnWebMessageReceived;
+                    _webView.CoreWebView2.NavigationStarting -= OnNavigationStarting;
+                }
                 _webView.Dispose();
                 _webView = null;
             }
