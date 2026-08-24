@@ -352,17 +352,26 @@
             metaPanel.classList.remove('show');
         });
 
-        // --- Save image (like VideoViewer, ImageViewer) ---
-        btnSave.addEventListener('click', function() {
-            saveCurrentFrame();
-        });
-
-        function saveCurrentFrame() {
-            if (!pagView) return;
-            // Flush to ensure current frame is rendered
+        // --- Capture current frame (WebGL safe) ---
+        function captureFrame() {
+            if (!pagView || !pagFile) return null;
+            // Flush to render current frame
             if (typeof pagView.flush === 'function') pagView.flush();
-            canvas.toBlob(function(blob) {
-                if (!blob) return;
+            // Create temp 2D canvas and copy from WebGL canvas
+            var tmp = document.createElement('canvas');
+            tmp.width = canvas.width;
+            tmp.height = canvas.height;
+            var ctx = tmp.getContext('2d');
+            ctx.drawImage(canvas, 0, 0);
+            return tmp;
+        }
+
+        // --- Save image ---
+        btnSave.addEventListener('click', function() {
+            var tmp = captureFrame();
+            if (!tmp) return;
+            tmp.toBlob(function(blob) {
+                if (!blob) { showToast('Save failed'); return; }
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
                 a.href = url;
@@ -371,33 +380,30 @@
                 URL.revokeObjectURL(url);
                 showToast('Saved');
             }, 'image/png');
-        }
+        });
 
         // --- Copy to clipboard (Ctrl+C) ---
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'c') {
                 e.preventDefault();
-                copyCurrentFrame();
-            }
-        });
-
-        function copyCurrentFrame() {
-            if (!pagView) return;
-            if (typeof pagView.flush === 'function') pagView.flush();
-            canvas.toBlob(function(blob) {
-                if (!blob || !navigator.clipboard || !window.ClipboardItem) {
+                var tmp = captureFrame();
+                if (!tmp) return;
+                if (!navigator.clipboard || !window.ClipboardItem) {
                     showToast('Copy not supported');
                     return;
                 }
-                navigator.clipboard.write([
-                    new ClipboardItem({ 'image/png': blob })
-                ]).then(function() {
-                    showToast('Copied');
-                }).catch(function() {
-                    showToast('Copy failed');
-                });
-            }, 'image/png');
-        }
+                tmp.toBlob(function(blob) {
+                    if (!blob) { showToast('Copy failed'); return; }
+                    navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]).then(function() {
+                        showToast('Copied');
+                    }).catch(function() {
+                        showToast('Copy failed');
+                    });
+                }, 'image/png');
+            }
+        });
 
         // --- Background switcher ---
         var BG_MODES = ['default', 'checker', 'white', 'black'];
