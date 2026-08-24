@@ -203,8 +203,14 @@
             font-family: 'Segoe UI', sans-serif;
             pointer-events: none; opacity: 0;
             transition: opacity 0.3s; z-index: 2;
+            line-height: 1.4;
         }
         #info.show { opacity: 1; }
+        #fpsDisplay {
+            font-family: 'Consolas', monospace;
+            font-weight: bold;
+            font-size: 11px;
+        }
 
         /* Toast notification */
         #toast {
@@ -216,20 +222,6 @@
             opacity: 0; z-index: 30; transition: opacity 0.3s;
         }
         #toast.show { opacity: 1; }
-
-        /* Performance OSD overlay */
-        #perfOverlay {
-            position: absolute; bottom: 44px; left: 8px;
-            z-index: 15; cursor: move;
-            opacity: 1; transition: opacity 0.3s;
-            pointer-events: auto;
-        }
-        #perfOverlay.hidden { opacity: 0; pointer-events: none; }
-        #perfOverlay canvas {
-            display: block;
-            background: rgba(0,0,0,0.6);
-            border-radius: 4px;
-        }
     </style>
 </head>
 <body>
@@ -241,11 +233,6 @@
         <div id="zoomInfo"></div>
         <div id="info"></div>
         <div id="toast"></div>
-
-        <!-- Performance OSD overlay -->
-        <div id="perfOverlay">
-            <canvas id="perfCanvas" width="120" height="30"></canvas>
-        </div>
 
         <!-- Top-right toolbar -->
         <div id="topBar">
@@ -260,10 +247,6 @@
             <!-- \xEF1F = BackgroundToggle -->
             <button class="btn" id="btnBg" title="切换背景">
                 <span class="icon">&#xEF1F;</span>
-            </button>
-            <!-- \xE9F9 = Performance -->
-            <button class="btn active" id="btnPerf" title="性能监控">
-                <span class="icon">&#xE9F9;</span>
             </button>
         </div>
         <div id="metaPanel"></div>
@@ -379,7 +362,6 @@
             btnMeta.title = T('BTN_Meta');
             btnSave.title = T('BTN_Save');
             btnBg.title = T('BTN_Background');
-            btnPerf.title = T('BTN_Perf');
             document.querySelector('.swatch[data-bg="default"]').title = T('BG_Default');
             document.querySelector('.swatch[data-bg="checker"]').title = T('BG_Checker');
             document.querySelector('.swatch[data-bg="white"]').title = T('BG_White');
@@ -401,127 +383,26 @@
         var ICON_VOL1 = '\uE993';
         var ICON_VOL0 = '\uE74F';
 
-        // --- Performance overlay ---
-        var perfOverlay = document.getElementById('perfOverlay');
-        var perfCanvas = document.getElementById('perfCanvas');
-        var fpsHistory = [];
-        var flushHistory = [];
-        var perfVisible = localStorage.getItem('pag-perf-visible') !== '0';
-        var perfDrag = { active: false, startX: 0, startY: 0, origX: 0, origY: 0 };
+        // --- Performance monitoring (simplified) ---
+        var currentFps = 0;
+        var currentFlushTime = 0;
 
-        // Restore position
-        var savedPerfPos = localStorage.getItem('pag-perf-pos');
-        if (savedPerfPos) {
-            try {
-                var pos = JSON.parse(savedPerfPos);
-                if (pos.left) { perfOverlay.style.left = pos.left; perfOverlay.style.bottom = 'auto'; }
-                if (pos.top) perfOverlay.style.top = pos.top;
-            } catch(e) {}
-        }
-
-        function drawPerfGraph() {
-            var ctx = perfCanvas.getContext('2d');
-            var W = 120, H = 30;
-            ctx.clearRect(0, 0, W, H);
-
-            var currentFps = fpsHistory.length > 0 ? fpsHistory[fpsHistory.length - 1] : 0;
-            var currentMs = flushHistory.length > 0 ? flushHistory[flushHistory.length - 1] : 0;
-
-            // 刻度线（虚线）
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.setLineDash([1, 1]);
-            ctx.lineWidth = 0.5;
-            // 60fps 线（顶部）
-            ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(W, 0); ctx.stroke();
-            // 30fps 线（中间）
-            ctx.beginPath(); ctx.moveTo(30, 15); ctx.lineTo(W, 15); ctx.stroke();
-            ctx.setLineDash([]);
-
-            // 第一行：FPS
+        function updatePerfDisplay() {
+            // Update FPS in info element
             var fpsColor = currentFps >= 50 ? '#4CAF50' : (currentFps >= 30 ? '#FFC107' : '#F44336');
-            ctx.fillStyle = fpsColor;
-            ctx.font = 'bold 10px monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText(String(currentFps), 2, 11);
-
-            // 分隔符
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillText('|', 22, 11);
-
-            // FPS 迷你图
-            drawSparkline(ctx, fpsHistory, 60, 30, 90, fpsColor, 0);
-
-            // 第二行：MS
-            var msColor = '#2196F3';
-            ctx.fillStyle = msColor;
-            ctx.font = 'bold 10px monospace';
-            ctx.fillText(String(Math.round(currentMs)), 2, 24);
-
-            // 分隔符
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillText('|', 22, 24);
-
-            // MS 迷你图
-            drawSparkline(ctx, flushHistory, 33, 30, 90, msColor, 15);
-        }
-
-        function drawSparkline(ctx, data, maxVal, points, graphWidth, color, yOffset) {
-            if (data.length < 2) return;
-            var recent = data.slice(-points);
-            var step = graphWidth / points;
-            var graphH = 12;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for (var i = 0; i < recent.length; i++) {
-                var x = 30 + i * step;
-                var y = yOffset + graphH - (recent[i] / maxVal) * graphH;
-                y = Math.max(yOffset, Math.min(yOffset + graphH, y));
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+            var fpsEl = document.getElementById('fpsDisplay');
+            if (fpsEl) {
+                fpsEl.textContent = currentFps + ' FPS';
+                fpsEl.style.color = fpsColor;
             }
-            ctx.strokeStyle = color;
-            ctx.stroke();
+
+            // Update progress bar color based on flush time
+            var barColor;
+            if (currentFlushTime <= 10) barColor = '#4CAF50';      // 绿色：流畅
+            else if (currentFlushTime <= 20) barColor = '#FFC107';  // 黄色：中等
+            else barColor = '#F44336';                              // 红色：卡顿
+            progressFill.style.background = barColor;
         }
-
-        // Perf toggle
-        if (!perfVisible) { perfOverlay.classList.add('hidden'); }
-        else { btnPerf.classList.add('active'); }
-
-        btnPerf.addEventListener('click', function() {
-            perfVisible = !perfVisible;
-            perfOverlay.classList.toggle('hidden', !perfVisible);
-            btnPerf.classList.toggle('active', perfVisible);
-            localStorage.setItem('pag-perf-visible', perfVisible ? '1' : '0');
-            if (perfVisible) drawPerfGraph();
-        });
-
-        // Perf drag
-        perfOverlay.addEventListener('mousedown', function(e) {
-            perfDrag.active = true;
-            perfDrag.startX = e.clientX;
-            perfDrag.startY = e.clientY;
-            var rect = perfOverlay.getBoundingClientRect();
-            perfDrag.origX = rect.left;
-            perfDrag.origY = rect.top;
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', function(e) {
-            if (!perfDrag.active) return;
-            var dx = e.clientX - perfDrag.startX;
-            var dy = e.clientY - perfDrag.startY;
-            perfOverlay.style.left = (perfDrag.origX + dx) + 'px';
-            perfOverlay.style.top = (perfDrag.origY + dy) + 'px';
-            perfOverlay.style.bottom = 'auto';
-        });
-        document.addEventListener('mouseup', function() {
-            if (perfDrag.active) {
-                perfDrag.active = false;
-                localStorage.setItem('pag-perf-pos', JSON.stringify({
-                    left: perfOverlay.style.left,
-                    top: perfOverlay.style.top
-                }));
-            }
-        });
 
         // --- Toast ---
         var toastTimer = null;
@@ -812,7 +693,7 @@
                 duration = pagFile.duration();
                 pagWidth = pagFile.width();
                 pagHeight = pagFile.height();
-                infoEl.textContent = pagWidth + '\u00d7' + pagHeight;
+                infoEl.innerHTML = pagWidth + '\u00d7' + pagHeight + '<br><span id="fpsDisplay">0 FPS</span>';
                 canvas.width = pagWidth; canvas.height = pagHeight;
 
                 // Collect metadata
@@ -847,14 +728,12 @@
 
                 pagView.addListener('onAnimationUpdate', function() {
                     if (!isDragging && pagView) updateProgress(pagView.getProgress());
-                    // Collect perf data
-                    if (perfVisible && typeof pagView.getDebugData === 'function') {
+                    // Update perf data
+                    if (typeof pagView.getDebugData === 'function') {
                         var debug = pagView.getDebugData();
-                        fpsHistory.push(debug.FPS || 0);
-                        flushHistory.push(debug.flushTime || 0);
-                        if (fpsHistory.length > 30) fpsHistory.shift();
-                        if (flushHistory.length > 30) flushHistory.shift();
-                        drawPerfGraph();
+                        currentFps = Math.round(debug.FPS || 0);
+                        currentFlushTime = debug.flushTime || 0;
+                        updatePerfDisplay();
                     }
                 });
                 pagView.addListener('onAnimationEnd', function() {
