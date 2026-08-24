@@ -616,11 +616,15 @@
                 };
                 log('Meta: ' + JSON.stringify(pagMeta));
 
-                // Force preserveDrawingBuffer for frame capture
+                // Force preserveDrawingBuffer and alpha for frame capture
                 var origGetContext = canvas.getContext.bind(canvas);
                 canvas.getContext = function(type, attrs) {
                     if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
-                        attrs = Object.assign({}, attrs || {}, { preserveDrawingBuffer: true, premultipliedAlpha: false });
+                        attrs = Object.assign({}, attrs || {}, {
+                            preserveDrawingBuffer: true,
+                            premultipliedAlpha: false,
+                            alpha: true
+                        });
                     }
                     return origGetContext(type, attrs);
                 };
