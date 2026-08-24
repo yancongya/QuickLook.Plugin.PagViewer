@@ -210,23 +210,54 @@ namespace QuickLook.Plugin.PagViewer
             string bg, fg, fgAlt;
             if (_theme == Themes.Light)
             {
-                bg = "#ffffff";
-                fg = "#1a1a1a";
-                fgAlt = "#666666";
+                bg = "#ffffff"; fg = "#1a1a1a"; fgAlt = "#666666";
             }
             else
             {
-                bg = "#202020";
-                fg = "#cccccc";
-                fgAlt = "#888888";
+                bg = "#202020"; fg = "#cccccc"; fgAlt = "#888888";
             }
+
+            var translations = LoadTranslations();
+            var isEn = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName != "zh";
+            var lang = isEn ? "en" : "zh";
 
             var script = $@"
                 document.documentElement.style.setProperty('--bg', '{bg}');
                 document.documentElement.style.setProperty('--fg', '{fg}');
                 document.documentElement.style.setProperty('--fg-alt', '{fgAlt}');
+                window.__lang = '{lang}';
+                window.__translations = {translations};
+                if (typeof applyI18n === 'function') applyI18n();
             ";
             await _webView.CoreWebView2.ExecuteScriptAsync(script);
+        }
+
+        private string LoadTranslations()
+        {
+            try
+            {
+                var exeDir = Path.GetDirectoryName(typeof(PagViewerPanel).Assembly.Location) ?? "";
+                var configPath = Path.Combine(exeDir, "Translations.config");
+                if (!File.Exists(configPath)) return "{}";
+
+                var doc = new System.Xml.XmlDocument();
+                doc.Load(configPath);
+                var dict = new System.Collections.Generic.Dictionary<string, object>();
+                var nodes = doc.SelectNodes("//Entry");
+                if (nodes == null) return "{}";
+                foreach (System.Xml.XmlNode entry in nodes)
+                {
+                    var key = entry.Attributes?["Key"]?.Value;
+                    if (key == null) continue;
+                    dict[key] = new
+                    {
+                        zh = entry.Attributes["Value"]?.Value ?? "",
+                        en = entry.Attributes["ValueEn"]?.Value ?? ""
+                    };
+                }
+                return JsonSerializer.Serialize(dict);
+            }
+            catch { return "{}"; }
         }
 
         private async Task SendFileToWebView()

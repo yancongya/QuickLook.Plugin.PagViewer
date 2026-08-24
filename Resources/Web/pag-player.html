@@ -231,34 +231,34 @@
         <!-- Top-right toolbar -->
         <div id="topBar">
             <!-- \xE792 = Info -->
-            <button class="btn" id="btnMeta" title="Info">
+            <button class="btn" id="btnMeta" title="文件信息">
                 <span class="icon">&#xE946;</span>
             </button>
             <!-- \xE74B = Save -->
-            <button class="btn" id="btnSave" title="Save as PNG">
+            <button class="btn" id="btnSave" title="保存为PNG">
                 <span class="icon">&#xE74B;</span>
             </button>
             <!-- \xEF1F = BackgroundToggle -->
-            <button class="btn" id="btnBg" title="Background">
+            <button class="btn" id="btnBg" title="切换背景">
                 <span class="icon">&#xEF1F;</span>
             </button>
         </div>
         <div id="metaPanel"></div>
         <div id="colorPicker">
             <div class="colorSwatches">
-                <div class="swatch" data-bg="default" style="background:var(--bg)" title="Default"></div>
-                <div class="swatch" data-bg="checker" style="background:repeating-conic-gradient(#e0e0e0 0% 25%, #fff 0% 50%) 50%/8px 8px" title="Checkerboard"></div>
-                <div class="swatch" data-bg="white" style="background:#fff" title="White"></div>
-                <div class="swatch" data-bg="black" style="background:#000" title="Black"></div>
+                <div class="swatch" data-bg="default" style="background:var(--bg)" title="默认"></div>
+                <div class="swatch" data-bg="checker" style="background:repeating-conic-gradient(#e0e0e0 0% 25%, #fff 0% 50%) 50%/8px 8px" title="棋盘格"></div>
+                <div class="swatch" data-bg="white" style="background:#fff" title="白色"></div>
+                <div class="swatch" data-bg="black" style="background:#000" title="黑色"></div>
             </div>
-            <input type="color" id="customColor" value="#202020" title="Custom color">
+            <input type="color" id="customColor" value="#202020" title="自定义颜色">
         </div>
 
         <div id="controls">
-            <button class="btn" id="btnPlayPause" title="Play / Pause">
+            <button class="btn" id="btnPlayPause" title="播放 / 暂停">
                 <span class="icon">&#xE768;</span>
             </button>
-            <button class="btn active" id="btnLoop" title="Loop">
+            <button class="btn active" id="btnLoop" title="循环">
                 <span class="icon">&#xE777;</span>
             </button>
             <div id="progressWrap">
@@ -267,7 +267,7 @@
                 <div id="progressThumb"></div>
             </div>
             <span id="time">00:00 / 00:00</span>
-            <button class="btn" id="btnMute" title="Volume">
+            <button class="btn" id="btnMute" title="音量">
                 <span class="icon" id="volumeIcon">&#xE767;</span>
             </button>
         </div>
@@ -279,6 +279,11 @@
 
     <script>
     (function() {
+        // --- i18n: read from C# Translations.config ---
+        var lang = window.__lang || 'zh';
+        var _t = window.__translations || {};
+        function T(key) { var v = _t[key]; return v ? (v[lang] || v.zh || '') : key; }
+
         var statusEl = document.getElementById('status');
         var canvas = document.getElementById('pagCanvas');
         var bgLayer = document.getElementById('bgLayer');
@@ -307,6 +312,25 @@
         var isPlaying = false, isLooping = true, isDragging = false;
         var duration = 0, pagWidth = 0, pagHeight = 0;
         var hideTimer = null;
+
+        // Apply i18n to UI elements
+        window.applyI18n = function() {
+            lang = window.__lang || 'zh';
+            _t = window.__translations || {};
+            btnPlay.title = T('BTN_PlayPause');
+            btnLoop.title = T('BTN_Loop');
+            btnMute.title = T('BTN_Volume');
+            btnMeta.title = T('BTN_Meta');
+            btnSave.title = T('BTN_Save');
+            btnBg.title = T('BTN_Background');
+            document.querySelector('.swatch[data-bg="default"]').title = T('BG_Default');
+            document.querySelector('.swatch[data-bg="checker"]').title = T('BG_Checker');
+            document.querySelector('.swatch[data-bg="white"]').title = T('BG_White');
+            document.querySelector('.swatch[data-bg="black"]').title = T('BG_Black');
+            customColor.title = T('BG_Custom');
+            statusEl.textContent = T('STATUS_Loading');
+        };
+        applyI18n();
         var volume = 1.0;
         var isMuted = false;
         var pagMeta = null;
@@ -335,13 +359,13 @@
             var fps = pagMeta.fps || 30;
             var dur = (duration / 1000000).toFixed(2);
             metaPanel.innerHTML =
-                '<span class="label">Width: </span>' + pagWidth + 'px<br>' +
-                '<span class="label">Height: </span>' + pagHeight + 'px<br>' +
-                '<span class="label">Duration: </span>' + dur + 's<br>' +
-                '<span class="label">FPS: </span>' + fps + '<br>' +
-                '<span class="label">Layers: </span>' + (pagMeta.numLayers || '-') + '<br>' +
-                '<span class="label">Images: </span>' + (pagMeta.numImages || '-') + '<br>' +
-                '<span class="label">Texts: </span>' + (pagMeta.numTexts || '-');
+                '<span class="label">' + T('META_Width') + ': </span>' + pagWidth + 'px<br>' +
+                '<span class="label">' + T('META_Height') + ': </span>' + pagHeight + 'px<br>' +
+                '<span class="label">' + T('META_Duration') + ': </span>' + dur + 's<br>' +
+                '<span class="label">' + T('META_FPS') + ': </span>' + fps + '<br>' +
+                '<span class="label">' + T('META_Layers') + ': </span>' + (pagMeta.numLayers || '-') + '<br>' +
+                '<span class="label">' + T('META_Images') + ': </span>' + (pagMeta.numImages || '-') + '<br>' +
+                '<span class="label">' + T('META_Texts') + ': </span>' + (pagMeta.numTexts || '-');
         }
 
         btnMeta.addEventListener('mouseenter', function() {
@@ -385,10 +409,10 @@
         // --- Save image (save next to PAG file) ---
         btnSave.addEventListener('click', function() {
             var base64 = captureAsBase64();
-            if (!base64) { showToast('Save failed'); return; }
+            if (!base64) { showToast(T('TOAST_SaveFailed')); return; }
             if (window.chrome && window.chrome.webview) {
                 window.chrome.webview.postMessage({type: 'saveImage', data: base64});
-                showToast('Saved');
+                showToast(T('TOAST_Saved'));
             }
         });
 
@@ -400,7 +424,7 @@
                 if (!base64) return;
                 if (window.chrome && window.chrome.webview) {
                     window.chrome.webview.postMessage({type: 'copyImage', data: base64});
-                    showToast('Copied');
+                    showToast(T('TOAST_Copied'));
                 }
             }
         });
@@ -583,26 +607,26 @@
         // --- Load PAG ---
         async function loadFile(base64, libpagSrc, wasmSrc) {
             try {
-                statusEl.textContent = 'Loading libpag...';
+                statusEl.textContent = T('STATUS_InitLibpag');
                 if (!pag) {
                     var s = document.createElement('script');
                     s.src = libpagSrc;
                     document.head.appendChild(s);
                     await new Promise(function(ok, fail) { s.onload=ok; s.onerror=function(){fail(new Error('load libpag.js failed'))}; });
-                    statusEl.textContent = 'Initializing...';
+                    statusEl.textContent = T('STATUS_InitPAG');
                     pag = await window.libpag.PAGInit({locateFile:function(){return wasmSrc}});
                     log('PAG initialized');
                 }
                 if (pagView) { try{pagView.destroy();}catch(e){} pagView=null; }
                 if (pagFile) { try{pagFile.destroy();}catch(e){} pagFile=null; }
 
-                statusEl.textContent = 'Decoding...';
+                statusEl.textContent = T('STATUS_Decoding');
                 var raw = atob(base64);
                 var buf = new Uint8Array(raw.length);
                 for (var i=0;i<raw.length;i++) buf[i]=raw.charCodeAt(i);
                 var ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset+buf.byteLength);
                 pagFile = await pag.PAGFile.load(ab);
-                if (!pagFile) { statusEl.textContent='Invalid PAG file'; return; }
+                if (!pagFile) { statusEl.textContent=T('STATUS_InvalidFile'); return; }
 
                 duration = pagFile.duration();
                 pagWidth = pagFile.width();
@@ -633,7 +657,7 @@
                 };
 
                 pagView = await pag.PAGView.init(pagFile, canvas, {useScale:false});
-                if (!pagView) { statusEl.textContent='Failed to create view'; return; }
+                if (!pagView) { statusEl.textContent=T('STATUS_CreateView'); return; }
                 pagView.setRepeatCount(0);
                 applyVolume();
 
@@ -652,7 +676,7 @@
                 if (window.chrome && window.chrome.webview)
                     window.chrome.webview.postMessage({type:'loaded', width:pagWidth, height:pagHeight});
             } catch(err) {
-                statusEl.textContent = 'Error: ' + err.message;
+                statusEl.textContent = T('STATUS_Error') + ': ' + err.message;
                 log('Error: ' + err.message);
                 if (window.chrome && window.chrome.webview)
                     window.chrome.webview.postMessage({type:'error', message:err.message});
