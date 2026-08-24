@@ -14,6 +14,8 @@ packages/
 
 # Cloned reference projects
 QuickLook.Plugin.LottieFilesViewer/
+QuickLook.Plugin.VideoViewer/
+QuickLook/
 
 # Plugin package
 *.qlplugin

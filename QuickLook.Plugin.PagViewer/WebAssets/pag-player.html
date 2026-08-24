@@ -4,182 +4,314 @@
     <meta charset="utf-8">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background: #1E1E1E; }
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            background: #202020; font-family: 'Segoe UI', sans-serif;
+            user-select: none;
+        }
         #container {
-            width: 100%; height: calc(100% - 44px);
+            width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
+            position: relative;
         }
         #pagCanvas { max-width: 100%; max-height: 100%; }
+
+        /* Control bar - auto hide */
         #controls {
-            height: 44px; background: rgba(0,0,0,0.85);
-            display: flex; align-items: center; padding: 0 12px; gap: 10px;
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 32px;
+            background: rgba(30,30,30,0.92);
+            display: flex; align-items: center;
+            padding: 0 8px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            z-index: 10;
         }
-        #controls button {
-            background: transparent; border: none; color: #fff;
-            font-size: 16px; cursor: pointer; width: 32px; height: 32px;
+        #controls.hidden { opacity: 0; pointer-events: none; }
+
+        /* Buttons */
+        .btn {
+            background: transparent; border: none; color: #ccc;
+            width: 32px; height: 32px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 4px;
+            font-size: 14px; border-radius: 2px;
+            transition: background 0.15s, color 0.15s;
+            flex-shrink: 0;
         }
-        #controls button:hover { background: rgba(255,255,255,0.12); }
-        #progress {
-            flex: 1; -webkit-appearance: none; appearance: none;
-            height: 4px; background: #444; outline: none; border-radius: 2px;
-            cursor: pointer;
+        .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn:active { background: rgba(255,255,255,0.15); }
+        .btn.active { color: #76b9ed; }
+
+        /* Progress bar */
+        #progressWrap {
+            flex: 1; height: 10px; margin: 0 6px;
+            position: relative; cursor: pointer;
+            display: flex; align-items: center;
         }
-        #progress::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 14px; height: 14px;
-            background: #fff; border-radius: 50%; cursor: pointer;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        #progressBg {
+            position: absolute; left: 0; right: 0;
+            height: 1px; background: rgba(255,255,255,0.2);
+            top: 50%; transform: translateY(-50%);
         }
-        #time { color: #bbb; font-size: 12px; font-family: 'Consolas', monospace; min-width: 110px; }
-        #info { color: #888; font-size: 12px; font-family: 'Consolas', monospace; }
+        #progressFill {
+            position: absolute; left: 0; width: 0;
+            height: 1px; background: rgba(255,255,255,0.7);
+            top: 50%; transform: translateY(-50%);
+            transition: none;
+        }
+        #progressThumb {
+            position: absolute; left: 0;
+            width: 10px; height: 10px;
+            border-radius: 50%; background: transparent;
+            top: 50%; transform: translate(-50%, -50%);
+            transition: background 0.15s, transform 0.15s;
+            z-index: 2;
+        }
+        #progressWrap:hover #progressThumb {
+            background: #fff;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        #progressWrap:hover #progressFill { height: 2px; }
+        #progressWrap:hover #progressBg { height: 2px; }
+
+        /* Time */
+        #time {
+            color: #aaa; font-size: 11px;
+            font-family: 'Consolas', 'Segoe UI', monospace;
+            min-width: 90px; text-align: center;
+            flex-shrink: 0; white-space: nowrap;
+        }
+
+        /* Volume icon */
+        #volumeIcon { font-size: 13px; }
+
+        /* Status */
         #status {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #888; font-size: 14px; font-family: -apple-system, 'Segoe UI', sans-serif;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #888; font-size: 13px;
         }
+
+        /* Info overlay */
+        #info {
+            position: absolute; top: 8px; right: 8px;
+            color: rgba(255,255,255,0.5); font-size: 11px;
+            font-family: 'Consolas', monospace;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #info.show { opacity: 1; }
     </style>
 </head>
 <body>
     <div id="container">
         <canvas id="pagCanvas"></canvas>
+        <div id="info"></div>
+        <div id="controls">
+            <button class="btn" id="btnPlayPause" title="Play / Pause">&#9654;</button>
+            <button class="btn" id="btnLoop" title="Loop">&#8634;</button>
+            <div id="progressWrap">
+                <div id="progressBg"></div>
+                <div id="progressFill"></div>
+                <div id="progressThumb"></div>
+            </div>
+            <span id="time">00:00 / 00:00</span>
+            <button class="btn" id="btnMute" title="Volume">
+                <span id="volumeIcon">&#128266;</span>
+            </button>
+        </div>
+        <div id="status">Loading...</div>
     </div>
-    <div id="controls">
-        <button id="playPause" title="Play / Pause">&#9654;</button>
-        <button id="stop" title="Stop">&#9632;</button>
-        <input type="range" id="progress" min="0" max="1000" value="0" step="1">
-        <span id="time">00:00 / 00:00</span>
-        <span id="info"></span>
-    </div>
-    <div id="status">Loading...</div>
 
     <script>
     (function() {
         var statusEl = document.getElementById('status');
         var canvas = document.getElementById('pagCanvas');
-        var playPauseBtn = document.getElementById('playPause');
-        var stopBtn = document.getElementById('stop');
-        var progressEl = document.getElementById('progress');
+        var controls = document.getElementById('controls');
+        var btnPlay = document.getElementById('btnPlayPause');
+        var btnLoop = document.getElementById('btnLoop');
+        var btnMute = document.getElementById('btnMute');
+        var volumeIcon = document.getElementById('volumeIcon');
+        var progressWrap = document.getElementById('progressWrap');
+        var progressFill = document.getElementById('progressFill');
+        var progressThumb = document.getElementById('progressThumb');
         var timeEl = document.getElementById('time');
         var infoEl = document.getElementById('info');
 
         var pag = null, pagFile = null, pagView = null;
-        var isPlaying = false, isDragging = false;
+        var isPlaying = false, isLooping = true, isDragging = false;
         var duration = 0;
+        var hideTimer = null;
 
-        function log(msg) {
-            console.log('[PAG] ' + msg);
-            if (window.chrome && window.chrome.webview)
-                window.chrome.webview.postMessage({type: 'log', message: msg});
+        // --- Auto-hide controls ---
+        function showControls() {
+            controls.classList.remove('hidden');
+            infoEl.classList.add('show');
+            resetHideTimer();
         }
+        function hideControls() {
+            if (isDragging) return;
+            controls.classList.add('hidden');
+            infoEl.classList.remove('show');
+        }
+        function resetHideTimer() {
+            if (hideTimer) clearTimeout(hideTimer);
+            hideTimer = setTimeout(hideControls, 1500);
+        }
+        document.addEventListener('mousemove', showControls);
+        document.addEventListener('mousedown', showControls);
 
+        // --- Format time ---
         function fmt(us) {
             var s = us / 1000000;
             var m = Math.floor(s / 60);
             var sec = Math.floor(s % 60);
-            var ms = Math.floor((s % 1) * 100);
-            return m > 0
-                ? String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0')
-                : String(sec).padStart(2,'0') + '.' + String(ms).padStart(2,'0');
+            return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
         }
 
+        // --- Log ---
+        function log(msg) {
+            console.log('[PAG] ' + msg);
+            if (window.chrome && window.chrome.webview)
+                window.chrome.webview.postMessage({type:'log', message:msg});
+        }
+
+        // --- Load PAG file ---
         async function loadFile(base64, libpagSrc, wasmSrc) {
             try {
                 statusEl.textContent = 'Loading libpag...';
-                log('Loading libpag');
-
                 if (!pag) {
                     var s = document.createElement('script');
                     s.src = libpagSrc;
                     document.head.appendChild(s);
-                    await new Promise(function(ok, fail) { s.onload = ok; s.onerror = function() { fail(new Error('load libpag.js failed')) }; });
-                    log('libpag.js loaded');
+                    await new Promise(function(ok, fail) { s.onload=ok; s.onerror=function(){fail(new Error('load libpag.js failed'))}; });
                     statusEl.textContent = 'Initializing...';
-                    pag = await window.libpag.PAGInit({ locateFile: function() { return wasmSrc; } });
+                    pag = await window.libpag.PAGInit({locateFile:function(){return wasmSrc}});
                     log('PAG initialized');
                 }
 
-                if (pagView) { try { pagView.destroy(); } catch(e){} pagView = null; }
-                if (pagFile) { try { pagFile.destroy(); } catch(e){} pagFile = null; }
+                if (pagView) { try{pagView.destroy();}catch(e){} pagView=null; }
+                if (pagFile) { try{pagFile.destroy();}catch(e){} pagFile=null; }
 
                 statusEl.textContent = 'Decoding...';
                 var raw = atob(base64);
                 var buf = new Uint8Array(raw.length);
-                for (var i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
-                var ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+                for (var i=0;i<raw.length;i++) buf[i]=raw.charCodeAt(i);
+                var ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset+buf.byteLength);
 
                 pagFile = await pag.PAGFile.load(ab);
-                if (!pagFile) { statusEl.textContent = 'Invalid PAG file'; return; }
+                if (!pagFile) { statusEl.textContent='Invalid PAG file'; return; }
 
                 duration = pagFile.duration();
                 var w = pagFile.width(), h = pagFile.height();
-                log('PAG: ' + w + 'x' + h + ', ' + fmt(duration));
                 infoEl.textContent = w + '\u00d7' + h;
+                canvas.width = w; canvas.height = h;
 
-                canvas.width = w;
-                canvas.height = h;
-
-                pagView = await pag.PAGView.init(pagFile, canvas, { useScale: false });
-                if (!pagView) { statusEl.textContent = 'Failed to create view'; return; }
+                pagView = await pag.PAGView.init(pagFile, canvas, {useScale:false});
+                if (!pagView) { statusEl.textContent='Failed to create view'; return; }
 
                 pagView.setRepeatCount(0);
 
                 pagView.addListener('onAnimationUpdate', function() {
                     if (!isDragging && pagView) {
                         var p = pagView.getProgress();
-                        progressEl.value = Math.round(p * 1000);
-                        timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration);
+                        updateProgress(p);
                     }
+                });
+
+                pagView.addListener('onAnimationEnd', function() {
+                    if (!isLooping) { isPlaying=false; updatePlayBtn(); }
                 });
 
                 await pagView.play();
                 isPlaying = true;
-                playPauseBtn.innerHTML = '&#9646;&#9646;';
+                updatePlayBtn();
                 statusEl.style.display = 'none';
                 log('Playing');
 
                 if (window.chrome && window.chrome.webview)
-                    window.chrome.webview.postMessage({type: 'loaded', width: w, height: h});
+                    window.chrome.webview.postMessage({type:'loaded', width:w, height:h});
             } catch(err) {
                 statusEl.textContent = 'Error: ' + err.message;
                 log('Error: ' + err.message);
                 if (window.chrome && window.chrome.webview)
-                    window.chrome.webview.postMessage({type: 'error', message: err.message});
+                    window.chrome.webview.postMessage({type:'error', message:err.message});
             }
         }
 
+        function updateProgress(p) {
+            var pct = (p * 100).toFixed(2) + '%';
+            progressFill.style.width = pct;
+            progressThumb.style.left = pct;
+            timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration);
+        }
+
+        function updatePlayBtn() {
+            btnPlay.innerHTML = isPlaying ? '&#9646;&#9646;' : '&#9654;';
+        }
+
+        // --- Progress bar interaction ---
+        function getProgressFromEvent(e) {
+            var rect = progressWrap.getBoundingClientRect();
+            return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        }
+
+        progressWrap.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            var p = getProgressFromEvent(e);
+            updateProgress(p);
+            if (pagView) pagView.setProgress(p);
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                var p = getProgressFromEvent(e);
+                updateProgress(p);
+                if (pagView) pagView.setProgress(p);
+            }
+        });
+        document.addEventListener('mouseup', function() { isDragging = false; });
+
+        // --- Buttons ---
+        btnPlay.addEventListener('click', function() {
+            if (!pagView) return;
+            if (isPlaying) { pagView.pause(); isPlaying=false; }
+            else { pagView.play(); isPlaying=true; }
+            updatePlayBtn();
+        });
+
+        btnLoop.addEventListener('click', function() {
+            isLooping = !isLooping;
+            btnLoop.classList.toggle('active', isLooping);
+            if (pagView) pagView.setRepeatCount(isLooping ? 0 : 1);
+        });
+        btnLoop.classList.add('active');
+
+        // --- Volume (scroll wheel on container) ---
+        var volume = 1.0;
+        var isMuted = false;
+        function updateVolumeIcon() {
+            if (isMuted || volume === 0) volumeIcon.innerHTML = '&#128264;';
+            else if (volume < 0.5) volumeIcon.innerHTML = '&#128265;';
+            else volumeIcon.innerHTML = '&#128266;';
+        }
+        btnMute.addEventListener('click', function() {
+            isMuted = !isMuted;
+            if (pagView) pagView.setVolume(isMuted ? 0 : volume);
+            updateVolumeIcon();
+        });
+
+        // --- Messages from C# ---
         window.addEventListener('message', function(e) {
             var msg = e.data;
             if (!msg || typeof msg !== 'object') return;
             if (msg.type === 'loadFile') loadFile(msg.base64, msg.libpagSrc, msg.wasmSrc);
         });
 
-        playPauseBtn.addEventListener('click', function() {
-            if (!pagView) return;
-            if (isPlaying) { pagView.pause(); isPlaying = false; playPauseBtn.innerHTML = '&#9654;'; }
-            else { pagView.play(); isPlaying = true; playPauseBtn.innerHTML = '&#9646;&#9646;'; }
-        });
-
-        stopBtn.addEventListener('click', function() {
-            if (!pagView) return;
-            isPlaying = false;
-            pagView.stop();
-            playPauseBtn.innerHTML = '&#9654;';
-            progressEl.value = 0;
-            timeEl.textContent = '00:00 / ' + fmt(duration);
-        });
-
-        progressEl.addEventListener('mousedown', function() { isDragging = true; });
-        progressEl.addEventListener('mouseup', function() {
-            isDragging = false;
-            if (pagView) pagView.setProgress(progressEl.value / 1000);
-        });
-        progressEl.addEventListener('input', function() {
-            timeEl.textContent = fmt(duration * progressEl.value / 1000) + ' / ' + fmt(duration);
-        });
-
+        // --- Ready ---
         log('Page ready');
         if (window.chrome && window.chrome.webview)
-            window.chrome.webview.postMessage({type: 'ready'});
+            window.chrome.webview.postMessage({type:'ready'});
     })();
     </script>
 </body>
