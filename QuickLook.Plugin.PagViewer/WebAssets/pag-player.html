@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #1E1E1E; }
+        #container {
+            width: 100%; height: calc(100% - 44px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #pagCanvas { max-width: 100%; max-height: 100%; }
+        #controls {
+            height: 44px; background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; padding: 0 12px; gap: 10px;
+        }
+        #controls button {
+            background: transparent; border: none; color: #fff;
+            font-size: 16px; cursor: pointer; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 4px;
+        }
+        #controls button:hover { background: rgba(255,255,255,0.12); }
+        #progress {
+            flex: 1; -webkit-appearance: none; appearance: none;
+            height: 4px; background: #444; outline: none; border-radius: 2px;
+            cursor: pointer;
+        }
+        #progress::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px;
+            background: #fff; border-radius: 50%; cursor: pointer;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+        #time { color: #bbb; font-size: 12px; font-family: 'Consolas', monospace; min-width: 110px; }
+        #info { color: #888; font-size: 12px; font-family: 'Consolas', monospace; }
+        #status {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #888; font-size: 14px; font-family: -apple-system, 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="pagCanvas"></canvas>
+    </div>
+    <div id="controls">
+        <button id="playPause" title="Play / Pause">&#9654;</button>
+        <button id="stop" title="Stop">&#9632;</button>
+        <input type="range" id="progress" min="0" max="1000" value="0" step="1">
+        <span id="time">00:00 / 00:00</span>
+        <span id="info"></span>
+    </div>
+    <div id="status">Loading...</div>
+
+    <script>
+    (function() {
+        var statusEl = document.getElementById('status');
+        var canvas = document.getElementById('pagCanvas');
+        var playPauseBtn = document.getElementById('playPause');
+        var stopBtn = document.getElementById('stop');
+        var progressEl = document.getElementById('progress');
+        var timeEl = document.getElementById('time');
+        var infoEl = document.getElementById('info');
+
+        var pag = null, pagFile = null, pagView = null;
+        var isPlaying = false, isDragging = false;
+        var duration = 0;
+
+        function log(msg) {
+            console.log('[PAG] ' + msg);
+            if (window.chrome && window.chrome.webview)
+                window.chrome.webview.postMessage({type: 'log', message: msg});
+        }
+
+        function fmt(us) {
+            var s = us / 1000000;
+            var m = Math.floor(s / 60);
+            var sec = Math.floor(s % 60);
+            var ms = Math.floor((s % 1) * 100);
+            return m > 0
+                ? String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0')
+                : String(sec).padStart(2,'0') + '.' + String(ms).padStart(2,'0');
+        }
+
+        async function loadFile(base64, libpagSrc, wasmSrc) {
+            try {
+                statusEl.textContent = 'Loading libpag...';
+                log('Loading libpag');
+
+                if (!pag) {
+                    var s = document.createElement('script');
+                    s.src = libpagSrc;
+                    document.head.appendChild(s);
+                    await new Promise(function(ok, fail) { s.onload = ok; s.onerror = function() { fail(new Error('load libpag.js failed')) }; });
+                    log('libpag.js loaded');
+                    statusEl.textContent = 'Initializing...';
+                    pag = await window.libpag.PAGInit({ locateFile: function() { return wasmSrc; } });
+                    log('PAG initialized');
+                }
+
+                if (pagView) { try { pagView.destroy(); } catch(e){} pagView = null; }
+                if (pagFile) { try { pagFile.destroy(); } catch(e){} pagFile = null; }
+
+                statusEl.textContent = 'Decoding...';
+                var raw = atob(base64);
+                var buf = new Uint8Array(raw.length);
+                for (var i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+                var ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+
+                pagFile = await pag.PAGFile.load(ab);
+                if (!pagFile) { statusEl.textContent = 'Invalid PAG file'; return; }
+
+                duration = pagFile.duration();
+                var w = pagFile.width(), h = pagFile.height();
+                log('PAG: ' + w + 'x' + h + ', ' + fmt(duration));
+                infoEl.textContent = w + '\u00d7' + h;
+
+                canvas.width = w;
+                canvas.height = h;
+
+                pagView = await pag.PAGView.init(pagFile, canvas, { useScale: false });
+                if (!pagView) { statusEl.textContent = 'Failed to create view'; return; }
+
+                pagView.setRepeatCount(0);
+
+                pagView.addListener('onAnimationUpdate', function() {
+                    if (!isDragging && pagView) {
+                        var p = pagView.getProgress();
+                        progressEl.value = Math.round(p * 1000);
+                        timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration);
+                    }
+                });
+
+                await pagView.play();
+                isPlaying = true;
+                playPauseBtn.innerHTML = '&#9646;&#9646;';
+                statusEl.style.display = 'none';
+                log('Playing');
+
+                if (window.chrome && window.chrome.webview)
+                    window.chrome.webview.postMessage({type: 'loaded', width: w, height: h});
+            } catch(err) {
+                statusEl.textContent = 'Error: ' + err.message;
+                log('Error: ' + err.message);
+                if (window.chrome && window.chrome.webview)
+                    window.chrome.webview.postMessage({type: 'error', message: err.message});
+            }
+        }
+
+        window.addEventListener('message', function(e) {
+            var msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type === 'loadFile') loadFile(msg.base64, msg.libpagSrc, msg.wasmSrc);
+        });
+
+        playPauseBtn.addEventListener('click', function() {
+            if (!pagView) return;
+            if (isPlaying) { pagView.pause(); isPlaying = false; playPauseBtn.innerHTML = '&#9654;'; }
+            else { pagView.play(); isPlaying = true; playPauseBtn.innerHTML = '&#9646;&#9646;'; }
+        });
+
+        stopBtn.addEventListener('click', function() {
+            if (!pagView) return;
+            isPlaying = false;
+            pagView.stop();
+            playPauseBtn.innerHTML = '&#9654;';
+            progressEl.value = 0;
+            timeEl.textContent = '00:00 / ' + fmt(duration);
+        });
+
+        progressEl.addEventListener('mousedown', function() { isDragging = true; });
+        progressEl.addEventListener('mouseup', function() {
+            isDragging = false;
+            if (pagView) pagView.setProgress(progressEl.value / 1000);
+        });
+        progressEl.addEventListener('input', function() {
+            timeEl.textContent = fmt(duration * progressEl.value / 1000) + ' / ' + fmt(duration);
+        });
+
+        log('Page ready');
+        if (window.chrome && window.chrome.webview)
+            window.chrome.webview.postMessage({type: 'ready'});
+    })();
+    </script>
+</body>
+</html>
