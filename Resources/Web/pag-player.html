@@ -280,8 +280,40 @@
     <script>
     (function() {
         // --- i18n: read from C# Translations.config ---
-        var lang = window.__lang || 'zh';
-        var _t = window.__translations || {};
+        // Default translations (fallback before C# sends config)
+        var _defaultT = {
+            'BTN_PlayPause': {zh:'播放 / 暂停',en:'Play / Pause'},
+            'BTN_Loop': {zh:'循环',en:'Loop'},
+            'BTN_Volume': {zh:'音量',en:'Volume'},
+            'BTN_Meta': {zh:'文件信息',en:'Info'},
+            'BTN_Save': {zh:'保存为PNG',en:'Save as PNG'},
+            'BTN_Background': {zh:'切换背景',en:'Background'},
+            'BG_Default': {zh:'默认',en:'Default'},
+            'BG_Checker': {zh:'棋盘格',en:'Checkerboard'},
+            'BG_White': {zh:'白色',en:'White'},
+            'BG_Black': {zh:'黑色',en:'Black'},
+            'BG_Custom': {zh:'自定义颜色',en:'Custom color'},
+            'STATUS_Loading': {zh:'加载中...',en:'Loading...'},
+            'STATUS_InitLibpag': {zh:'加载 libpag...',en:'Loading libpag...'},
+            'STATUS_InitPAG': {zh:'初始化...',en:'Initializing...'},
+            'STATUS_Decoding': {zh:'解码中...',en:'Decoding...'},
+            'STATUS_InvalidFile': {zh:'无效的PAG文件',en:'Invalid PAG file'},
+            'STATUS_CreateView': {zh:'创建视图...',en:'Creating view...'},
+            'STATUS_Error': {zh:'错误',en:'Error'},
+            'TOAST_Saved': {zh:'已保存',en:'Saved'},
+            'TOAST_Copied': {zh:'已复制',en:'Copied'},
+            'TOAST_SaveFailed': {zh:'保存失败',en:'Save failed'},
+            'TOAST_CopyFailed': {zh:'复制失败',en:'Copy failed'},
+            'META_Width': {zh:'宽度',en:'Width'},
+            'META_Height': {zh:'高度',en:'Height'},
+            'META_Duration': {zh:'时长',en:'Duration'},
+            'META_FPS': {zh:'帧率',en:'FPS'},
+            'META_Layers': {zh:'图层',en:'Layers'},
+            'META_Images': {zh:'图片',en:'Images'},
+            'META_Texts': {zh:'文本',en:'Texts'}
+        };
+        var lang = (navigator.language || 'zh').startsWith('zh') ? 'zh' : 'en';
+        var _t = _defaultT;
         function T(key) { var v = _t[key]; return v ? (v[lang] || v.zh || '') : key; }
 
         var statusEl = document.getElementById('status');
@@ -315,8 +347,8 @@
 
         // Apply i18n to UI elements
         window.applyI18n = function() {
-            lang = window.__lang || 'zh';
-            _t = window.__translations || {};
+            lang = window.__lang || lang;
+            _t = Object.assign({}, _defaultT, window.__translations || {});
             btnPlay.title = T('BTN_PlayPause');
             btnLoop.title = T('BTN_Loop');
             btnMute.title = T('BTN_Volume');
