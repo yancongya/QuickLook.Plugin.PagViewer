@@ -353,48 +353,34 @@
         });
 
         // --- Capture current frame with transparent background ---
-        function captureFrameAsDataUrl() {
+        function captureCanvas() {
             if (!pagView || !pagFile) return null;
             if (typeof pagView.flush === 'function') pagView.flush();
 
-            // Create temp canvas
             var tmp = document.createElement('canvas');
             tmp.width = canvas.width;
             tmp.height = canvas.height;
             var ctx = tmp.getContext('2d');
-
-            // Draw PAG canvas
             ctx.drawImage(canvas, 0, 0);
 
-            // Remove black background: convert black pixels to transparent
+            // Remove black background
             var imageData = ctx.getImageData(0, 0, tmp.width, tmp.height);
             var data = imageData.data;
             for (var i = 0; i < data.length; i += 4) {
-                // If pixel is black or near-black, make it transparent
                 if (data[i] < 10 && data[i+1] < 10 && data[i+2] < 10) {
-                    data[i+3] = 0; // Set alpha to 0
+                    data[i+3] = 0;
                 }
             }
             ctx.putImageData(imageData, 0, 0);
-
-            try { return tmp.toDataURL('image/png'); } catch(e) { return null; }
-        }
-
-        function dataUrlToBlob(dataUrl) {
-            var parts = dataUrl.split(',');
-            var mime = parts[0].match(/:(.*?);/)[1];
-            var raw = atob(parts[1]);
-            var arr = new Uint8Array(raw.length);
-            for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-            return new Blob([arr], { type: mime });
+            return tmp;
         }
 
         // --- Save image ---
         btnSave.addEventListener('click', function() {
-            var dataUrl = captureFrameAsDataUrl();
-            if (!dataUrl) { showToast('Save failed'); return; }
+            var tmp = captureCanvas();
+            if (!tmp) { showToast('Save failed'); return; }
             var a = document.createElement('a');
-            a.href = dataUrl;
+            a.href = tmp.toDataURL('image/png');
             a.download = 'pag-frame-' + Date.now() + '.png';
             a.click();
             showToast('Saved');
@@ -404,20 +390,22 @@
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'c') {
                 e.preventDefault();
-                var dataUrl = captureFrameAsDataUrl();
-                if (!dataUrl) return;
+                var tmp = captureCanvas();
+                if (!tmp) return;
                 if (!navigator.clipboard || !window.ClipboardItem) {
                     showToast('Copy not supported');
                     return;
                 }
-                var blob = dataUrlToBlob(dataUrl);
-                navigator.clipboard.write([
-                    new ClipboardItem({ 'image/png': blob })
-                ]).then(function() {
-                    showToast('Copied');
-                }).catch(function() {
-                    showToast('Copy failed');
-                });
+                tmp.toBlob(function(blob) {
+                    if (!blob) { showToast('Copy failed'); return; }
+                    navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]).then(function() {
+                        showToast('Copied');
+                    }).catch(function() {
+                        showToast('Copy failed');
+                    });
+                }, 'image/png');
             }
         });
 
