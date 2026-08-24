@@ -671,15 +671,10 @@
                 log('PAGFile methods: ' + fileProps.join(', '));
                 
                 pagMeta = {
-                    fps: typeof pagFile.fps === 'function' ? pagFile.fps() : 
-                         (typeof pagFile.frameRate === 'function' ? pagFile.frameRate() : 30),
-                    numLayers: typeof pagFile.numLayers === 'function' ? pagFile.numLayers() : 
-                               (typeof pagFile.numChildren === 'function' ? pagFile.numChildren() : 
-                               (typeof pagFile.layerCount === 'function' ? pagFile.layerCount() : null)),
-                    numImages: typeof pagFile.numImages === 'function' ? pagFile.numImages() : 
-                               (typeof pagFile.imageCount === 'function' ? pagFile.imageCount() : null),
-                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : 
-                              (typeof pagFile.textCount === 'function' ? pagFile.textCount() : null)
+                    fps: typeof pagFile.frameRate === 'function' ? pagFile.frameRate() : 30,
+                    numLayers: typeof pagFile.numChildren === 'function' ? pagFile.numChildren() : null,
+                    numImages: typeof pagFile.numImages === 'function' ? pagFile.numImages() : null,
+                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : null
                 };
                 log('Meta: ' + JSON.stringify(pagMeta));
 
