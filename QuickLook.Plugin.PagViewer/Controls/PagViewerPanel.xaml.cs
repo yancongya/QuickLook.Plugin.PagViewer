@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
+using QuickLook.Common.Plugin;
 
 namespace QuickLook.Plugin.PagViewer.Controls
 {
@@ -16,6 +17,7 @@ namespace QuickLook.Plugin.PagViewer.Controls
         private string _pagFilePath;
         private readonly string _webAssetsDir;
         private WebView2 _webView;
+        private Themes _theme = Themes.Dark;
 
         public PagViewerPanel()
         {
@@ -39,6 +41,11 @@ namespace QuickLook.Plugin.PagViewer.Controls
         public void LoadFile(string path)
         {
             _pagFilePath = path;
+        }
+
+        public void SetTheme(Themes theme)
+        {
+            _theme = theme;
         }
 
         private static bool IsWebView2Available()
@@ -111,6 +118,7 @@ namespace QuickLook.Plugin.PagViewer.Controls
 
                 if (type == "ready")
                 {
+                    await ApplyTheme();
                     await SendFileToWebView();
                 }
                 else if (type == "loaded")
@@ -124,6 +132,31 @@ namespace QuickLook.Plugin.PagViewer.Controls
                 }
             }
             catch { }
+        }
+
+        private async Task ApplyTheme()
+        {
+            // Match VideoViewer's DynamicResource colors
+            string bg, fg, fgAlt;
+            if (_theme == Themes.Light)
+            {
+                bg = "#ffffff";
+                fg = "#1a1a1a";
+                fgAlt = "#666666";
+            }
+            else
+            {
+                bg = "#202020";
+                fg = "#cccccc";
+                fgAlt = "#888888";
+            }
+
+            var script = $@"
+                document.documentElement.style.setProperty('--bg', '{bg}');
+                document.documentElement.style.setProperty('--fg', '{fg}');
+                document.documentElement.style.setProperty('--fg-alt', '{fgAlt}');
+            ";
+            await _webView.CoreWebView2.ExecuteScriptAsync(script);
         }
 
         private async Task SendFileToWebView()

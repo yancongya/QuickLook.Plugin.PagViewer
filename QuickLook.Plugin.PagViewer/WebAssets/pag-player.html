@@ -3,12 +3,21 @@
 <head>
     <meta charset="utf-8">
     <style>
+        :root {
+            --bg: #202020;
+            --fg: #cccccc;
+            --fg-alt: #888888;
+            --accent: #76b9ed;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%; height: 100%; overflow: hidden;
-            background: #202020; font-family: 'Segoe UI', sans-serif;
+            background: var(--bg); font-family: 'Segoe UI', sans-serif;
             user-select: none;
         }
+        /* Segoe Fluent Icons */
+        .icon { font-family: 'Segoe MDL2 Assets', 'Segoe Fluent Icons'; font-size: 14px; }
+
         #container {
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
@@ -16,7 +25,7 @@
         }
         #pagCanvas { max-width: 100%; max-height: 100%; }
 
-        /* Control bar - auto hide */
+        /* Control bar - auto hide like VideoViewer */
         #controls {
             position: absolute; bottom: 0; left: 0; right: 0;
             height: 32px;
@@ -29,74 +38,71 @@
         }
         #controls.hidden { opacity: 0; pointer-events: none; }
 
-        /* Buttons */
+        /* Buttons - match VideoViewer CaptionButtonStyle */
         .btn {
-            background: transparent; border: none; color: #ccc;
+            background: transparent; border: none; color: var(--fg);
             width: 32px; height: 32px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; border-radius: 2px;
-            transition: background 0.15s, color 0.15s;
+            border-radius: 2px;
+            transition: background 0.1s;
             flex-shrink: 0;
         }
-        .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .btn:active { background: rgba(255,255,255,0.15); }
-        .btn.active { color: #76b9ed; }
+        .btn:hover { background: rgba(255,255,255,0.08); }
+        .btn:active { background: rgba(255,255,255,0.12); }
+        .btn.active { color: var(--accent); }
 
-        /* Progress bar */
+        /* Progress bar - match VideoViewer PositionSliderStyle */
         #progressWrap {
             flex: 1; height: 10px; margin: 0 6px;
             position: relative; cursor: pointer;
             display: flex; align-items: center;
         }
         #progressBg {
-            position: absolute; left: 0; right: 0;
+            position: absolute; left: 10px; right: 10px;
             height: 1px; background: rgba(255,255,255,0.2);
             top: 50%; transform: translateY(-50%);
         }
         #progressFill {
-            position: absolute; left: 0; width: 0;
-            height: 1px; background: rgba(255,255,255,0.7);
+            position: absolute; left: 10px; width: 0;
+            height: 1px; background: var(--fg);
             top: 50%; transform: translateY(-50%);
-            transition: none;
         }
+        /* Thumb - same as VideoViewer PositionSliderThumbTemplate (circle) */
         #progressThumb {
-            position: absolute; left: 0;
+            position: absolute; left: 10px;
             width: 10px; height: 10px;
+            border: 1px solid var(--fg);
             border-radius: 50%; background: transparent;
             top: 50%; transform: translate(-50%, -50%);
-            transition: background 0.15s, transform 0.15s;
+            opacity: 0;
+            transition: opacity 0.15s, background 0.15s;
             z-index: 2;
         }
-        #progressWrap:hover #progressThumb {
-            background: #fff;
-            transform: translate(-50%, -50%) scale(1);
-        }
+        #progressWrap:hover #progressThumb { opacity: 1; }
+        #progressWrap.dragging #progressThumb { opacity: 1; background: var(--fg); }
         #progressWrap:hover #progressFill { height: 2px; }
         #progressWrap:hover #progressBg { height: 2px; }
 
-        /* Time */
+        /* Time - match VideoViewer buttonTime style */
         #time {
-            color: #aaa; font-size: 11px;
-            font-family: 'Consolas', 'Segoe UI', monospace;
+            color: var(--fg); font-size: 11px;
+            font-family: 'Segoe UI', sans-serif;
             min-width: 90px; text-align: center;
             flex-shrink: 0; white-space: nowrap;
         }
-
-        /* Volume icon */
-        #volumeIcon { font-size: 13px; }
 
         /* Status */
         #status {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            color: #888; font-size: 13px;
+            color: var(--fg-alt); font-size: 13px;
         }
 
         /* Info overlay */
         #info {
             position: absolute; top: 8px; right: 8px;
-            color: rgba(255,255,255,0.5); font-size: 11px;
-            font-family: 'Consolas', monospace;
+            color: var(--fg-alt); font-size: 11px;
+            font-family: 'Segoe UI', sans-serif;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
@@ -109,17 +115,20 @@
         <canvas id="pagCanvas"></canvas>
         <div id="info"></div>
         <div id="controls">
-            <button class="btn" id="btnPlayPause" title="Play / Pause">&#9654;</button>
-            <button class="btn" id="btnLoop" title="Loop">&#8634;</button>
+            <!-- Play/Pause: \xE768=Play \xE769=Pause -->
+            <button class="btn" id="btnPlayPause" title="Play / Pause">
+                <span class="icon">&#xE768;</span>
+            </button>
+            <!-- Loop: \xE8D8=off \xE777=on (UpdateRestore) -->
+            <button class="btn active" id="btnLoop" title="Loop">
+                <span class="icon">&#xE777;</span>
+            </button>
             <div id="progressWrap">
                 <div id="progressBg"></div>
                 <div id="progressFill"></div>
                 <div id="progressThumb"></div>
             </div>
             <span id="time">00:00 / 00:00</span>
-            <button class="btn" id="btnMute" title="Volume">
-                <span id="volumeIcon">&#128266;</span>
-            </button>
         </div>
         <div id="status">Loading...</div>
     </div>
@@ -131,8 +140,6 @@
         var controls = document.getElementById('controls');
         var btnPlay = document.getElementById('btnPlayPause');
         var btnLoop = document.getElementById('btnLoop');
-        var btnMute = document.getElementById('btnMute');
-        var volumeIcon = document.getElementById('volumeIcon');
         var progressWrap = document.getElementById('progressWrap');
         var progressFill = document.getElementById('progressFill');
         var progressThumb = document.getElementById('progressThumb');
@@ -144,7 +151,13 @@
         var duration = 0;
         var hideTimer = null;
 
-        // --- Auto-hide controls ---
+        // Segoe Fluent Icons codes
+        var ICON_PLAY = '\uE768';
+        var ICON_PAUSE = '\uE769';
+        var ICON_LOOP_OFF = '\uE8D8';
+        var ICON_LOOP_ON = '\uE777';
+
+        // --- Auto-hide controls (like VideoViewer) ---
         function showControls() {
             controls.classList.remove('hidden');
             infoEl.classList.add('show');
@@ -162,7 +175,7 @@
         document.addEventListener('mousemove', showControls);
         document.addEventListener('mousedown', showControls);
 
-        // --- Format time ---
+        // --- Format time (like VideoViewer TimeTickToShortStringConverter) ---
         function fmt(us) {
             var s = us / 1000000;
             var m = Math.floor(s / 60);
@@ -170,7 +183,6 @@
             return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
         }
 
-        // --- Log ---
         function log(msg) {
             console.log('[PAG] ' + msg);
             if (window.chrome && window.chrome.webview)
@@ -242,23 +254,24 @@
 
         function updateProgress(p) {
             var pct = (p * 100).toFixed(2) + '%';
-            progressFill.style.width = pct;
-            progressThumb.style.left = pct;
+            progressFill.style.width = 'calc(' + pct + ' - 10px)';
+            progressThumb.style.left = 'calc(' + pct + ')';
             timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration);
         }
 
         function updatePlayBtn() {
-            btnPlay.innerHTML = isPlaying ? '&#9646;&#9646;' : '&#9654;';
+            btnPlay.querySelector('.icon').textContent = isPlaying ? ICON_PAUSE : ICON_PLAY;
         }
 
         // --- Progress bar interaction ---
         function getProgressFromEvent(e) {
             var rect = progressWrap.getBoundingClientRect();
-            return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            return Math.max(0, Math.min(1, (e.clientX - rect.left - 10) / (rect.width - 20)));
         }
 
         progressWrap.addEventListener('mousedown', function(e) {
             isDragging = true;
+            progressWrap.classList.add('dragging');
             var p = getProgressFromEvent(e);
             updateProgress(p);
             if (pagView) pagView.setProgress(p);
@@ -270,7 +283,10 @@
                 if (pagView) pagView.setProgress(p);
             }
         });
-        document.addEventListener('mouseup', function() { isDragging = false; });
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            progressWrap.classList.remove('dragging');
+        });
 
         // --- Buttons ---
         btnPlay.addEventListener('click', function() {
@@ -283,22 +299,8 @@
         btnLoop.addEventListener('click', function() {
             isLooping = !isLooping;
             btnLoop.classList.toggle('active', isLooping);
+            btnLoop.querySelector('.icon').textContent = isLooping ? ICON_LOOP_ON : ICON_LOOP_OFF;
             if (pagView) pagView.setRepeatCount(isLooping ? 0 : 1);
-        });
-        btnLoop.classList.add('active');
-
-        // --- Volume (scroll wheel on container) ---
-        var volume = 1.0;
-        var isMuted = false;
-        function updateVolumeIcon() {
-            if (isMuted || volume === 0) volumeIcon.innerHTML = '&#128264;';
-            else if (volume < 0.5) volumeIcon.innerHTML = '&#128265;';
-            else volumeIcon.innerHTML = '&#128266;';
-        }
-        btnMute.addEventListener('click', function() {
-            isMuted = !isMuted;
-            if (pagView) pagView.setVolume(isMuted ? 0 : volume);
-            updateVolumeIcon();
         });
 
         // --- Messages from C# ---

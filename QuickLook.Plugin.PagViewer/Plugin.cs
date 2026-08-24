@@ -47,6 +47,7 @@ namespace QuickLook.Plugin.PagViewer
         public void View(string path, ContextObject context)
         {
             _viewerPanel = new Controls.PagViewerPanel();
+            _viewerPanel.SetTheme(context.Theme);
             _viewerPanel.LoadFile(path);
 
             context.ViewerContent = _viewerPanel;
