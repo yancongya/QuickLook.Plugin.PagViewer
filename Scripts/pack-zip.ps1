@@ -1,8 +1,10 @@
-Remove-Item ..\QuickLook.Plugin.PagViewer.qlplugin -ErrorAction SilentlyContinue
+# Quick packaging script (run from project root)
+$ErrorActionPreference = "Stop"
 
-$files = Get-ChildItem -Path ..\bin\Release\ -Exclude *.pdb,*.xml
-Compress-Archive $files ..\QuickLook.Plugin.PagViewer.zip
-Move-Item ..\QuickLook.Plugin.PagViewer.zip ..\QuickLook.Plugin.PagViewer.qlplugin
+Remove-Item QuickLook.Plugin.PagViewer.qlplugin -ErrorAction SilentlyContinue
 
-Write-Host "Created QuickLook.Plugin.PagViewer.qlplugin"
-Get-Item ..\QuickLook.Plugin.PagViewer.qlplugin | Select-Object Name, Length
+$files = Get-ChildItem -Path bin/Release -Exclude "*.pdb", "*.xml"
+Compress-Archive -Path $files -DestinationPath "QuickLook.Plugin.PagViewer.zip"
+Move-Item "QuickLook.Plugin.PagViewer.zip" "QuickLook.Plugin.PagViewer.qlplugin"
+
+Write-Host "Done: QuickLook.Plugin.PagViewer.qlplugin" -ForegroundColor Green

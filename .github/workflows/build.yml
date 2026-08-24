@@ -1,0 +1,43 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $releaseDir = "bin/Release"
+          $exclude = @("*.pdb", "*.xml")
+          $files = Get-ChildItem -Path $releaseDir -Exclude $exclude
+          Compress-Archive -Path $files -DestinationPath "QuickLook.Plugin.PagViewer.zip"
+          Move-Item "QuickLook.Plugin.PagViewer.zip" "QuickLook.Plugin.PagViewer.qlplugin"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin
+          path: QuickLook.Plugin.PagViewer.qlplugin
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: QuickLook.Plugin.PagViewer.qlplugin
+          generate_release_notes: true
