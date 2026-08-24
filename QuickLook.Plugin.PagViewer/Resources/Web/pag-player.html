@@ -469,12 +469,13 @@
         }, { passive: false });
 
         // Pan: left-click drag on canvas
-        canvasWrap.addEventListener('mousedown', function(e) {
+        canvas.addEventListener('mousedown', function(e) {
             if (e.button === 0) {
                 isPanning = true;
                 panStartX = e.clientX - panX;
                 panStartY = e.clientY - panY;
-                canvasWrap.style.cursor = 'grabbing';
+                canvas.style.cursor = 'grabbing';
+                e.preventDefault();
             }
         });
         document.addEventListener('mousemove', function(e) {
@@ -487,7 +488,7 @@
         document.addEventListener('mouseup', function() {
             if (isPanning) {
                 isPanning = false;
-                canvasWrap.style.cursor = '';
+                canvas.style.cursor = '';
             }
         });
 

@@ -10,7 +10,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using QuickLook.Common.Plugin;
 
-namespace QuickLook.Plugin.PagViewer.Controls
+namespace QuickLook.Plugin.PagViewer
 {
     public partial class PagViewerPanel : UserControl
     {
@@ -23,7 +23,7 @@ namespace QuickLook.Plugin.PagViewer.Controls
         {
             _webAssetsDir = Path.Combine(
                 Path.GetDirectoryName(typeof(PagViewerPanel).Assembly.Location) ?? "",
-                "WebAssets");
+                "Resources", "Web");
 
             if (!IsWebView2Available())
             {

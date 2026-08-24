@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="WebAssets\**">
+    <Content Include="Resources\Web\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

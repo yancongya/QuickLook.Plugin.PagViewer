@@ -10,7 +10,7 @@ namespace QuickLook.Plugin.PagViewer
         private static double _lastWidth = 600;
         private static double _lastHeight = 440;
 
-        private Controls.PagViewerPanel _viewerPanel;
+        private PagViewerPanel _viewerPanel;
 
         public int Priority => 0;
 
@@ -46,7 +46,7 @@ namespace QuickLook.Plugin.PagViewer
 
         public void View(string path, ContextObject context)
         {
-            _viewerPanel = new Controls.PagViewerPanel();
+            _viewerPanel = new PagViewerPanel();
             _viewerPanel.SetTheme(context.Theme);
             _viewerPanel.LoadFile(path);
 
