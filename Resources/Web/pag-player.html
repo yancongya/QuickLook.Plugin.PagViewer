@@ -244,7 +244,7 @@
 
         <!-- Performance OSD overlay -->
         <div id="perfOverlay">
-            <canvas id="perfCanvas" width="200" height="60"></canvas>
+            <canvas id="perfCanvas" width="120" height="30"></canvas>
         </div>
 
         <!-- Top-right toolbar -->
@@ -421,42 +421,65 @@
 
         function drawPerfGraph() {
             var ctx = perfCanvas.getContext('2d');
-            var W = perfCanvas.width, H = perfCanvas.height;
+            var W = 120, H = 30;
             ctx.clearRect(0, 0, W, H);
 
-            // Grid lines
-            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-            ctx.setLineDash([2, 2]);
+            var currentFps = fpsHistory.length > 0 ? fpsHistory[fpsHistory.length - 1] : 0;
+            var currentMs = flushHistory.length > 0 ? flushHistory[flushHistory.length - 1] : 0;
+
+            // 刻度线（虚线）
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.setLineDash([1, 1]);
             ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); // 30fps line
-            ctx.stroke();
+            // 60fps 线（顶部）
+            ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(W, 0); ctx.stroke();
+            // 30fps 线（中间）
+            ctx.beginPath(); ctx.moveTo(30, 15); ctx.lineTo(W, 15); ctx.stroke();
             ctx.setLineDash([]);
 
-            // Flush time line (blue)
-            drawPerfLine(ctx, flushHistory, 33, function() { return '#2196F3'; }, W, H);
+            // 第一行：FPS
+            var fpsColor = currentFps >= 50 ? '#4CAF50' : (currentFps >= 30 ? '#FFC107' : '#F44336');
+            ctx.fillStyle = fpsColor;
+            ctx.font = 'bold 10px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(String(currentFps), 2, 11);
 
-            // FPS line (green/yellow/red)
-            drawPerfLine(ctx, fpsHistory, 60, function(fps) {
-                if (fps >= 50) return '#4CAF50';
-                if (fps >= 30) return '#FFC107';
-                return '#F44336';
-            }, W, H);
+            // 分隔符
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillText('|', 22, 11);
+
+            // FPS 迷你图
+            drawSparkline(ctx, fpsHistory, 60, 30, 90, fpsColor, 0);
+
+            // 第二行：MS
+            var msColor = '#2196F3';
+            ctx.fillStyle = msColor;
+            ctx.font = 'bold 10px monospace';
+            ctx.fillText(String(Math.round(currentMs)), 2, 24);
+
+            // 分隔符
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillText('|', 22, 24);
+
+            // MS 迷你图
+            drawSparkline(ctx, flushHistory, 33, 30, 90, msColor, 15);
         }
 
-        function drawPerfLine(ctx, data, maxVal, colorFn, W, H) {
+        function drawSparkline(ctx, data, maxVal, points, graphWidth, color, yOffset) {
             if (data.length < 2) return;
-            var step = W / 120;
-            ctx.lineWidth = 1.5;
+            var recent = data.slice(-points);
+            var step = graphWidth / points;
+            var graphH = 12;
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            for (var i = 0; i < data.length; i++) {
-                var x = i * step;
-                var y = H - (data[i] / maxVal) * H;
-                y = Math.max(0, Math.min(H, y));
+            for (var i = 0; i < recent.length; i++) {
+                var x = 30 + i * step;
+                var y = yOffset + graphH - (recent[i] / maxVal) * graphH;
+                y = Math.max(yOffset, Math.min(yOffset + graphH, y));
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             }
-            ctx.strokeStyle = colorFn(data[data.length - 1]);
+            ctx.strokeStyle = color;
             ctx.stroke();
         }
 
@@ -829,8 +852,8 @@
                         var debug = pagView.getDebugData();
                         fpsHistory.push(debug.FPS || 0);
                         flushHistory.push(debug.flushTime || 0);
-                        if (fpsHistory.length > 120) fpsHistory.shift();
-                        if (flushHistory.length > 120) flushHistory.shift();
+                        if (fpsHistory.length > 30) fpsHistory.shift();
+                        if (flushHistory.length > 30) flushHistory.shift();
                         drawPerfGraph();
                     }
                 });
