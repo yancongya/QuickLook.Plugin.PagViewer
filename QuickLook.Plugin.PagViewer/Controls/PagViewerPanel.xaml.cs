@@ -80,6 +80,7 @@ namespace QuickLook.Plugin.PagViewer.Controls
 
                 _webView.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
                 _webView.CoreWebView2.NavigationStarting += OnNavigationStarting;
+                _webView.CoreWebView2.Settings.IsZoomControlEnabled = false;
 
                 _webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
                     "pagassets.local",

@@ -53,6 +53,26 @@
 
         #pagCanvas { max-width: 100%; max-height: 100%; position: relative; z-index: 1; }
 
+        /* Canvas wrapper for zoom + pan */
+        #canvasWrap {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            transform-origin: center center;
+        }
+        #canvasWrap.panning { cursor: grab; }
+        #canvasWrap.panning:active { cursor: grabbing; }
+
+        /* Zoom level indicator (like LottieFilesViewer zoomLevelInfo) */
+        #zoomInfo {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(80,80,80,0.9); color: #fff;
+            padding: 4px 14px; border-radius: 5px;
+            font-size: 18px; pointer-events: none;
+            opacity: 0; z-index: 20;
+            transition: opacity 0.2s;
+        }
+
         /* Top-right toolbar (like LottieFilesViewer) */
         #topBar {
             position: absolute; top: 8px; right: 8px;
@@ -192,7 +212,10 @@
 <body>
     <div id="container">
         <div id="bgLayer" class="default"></div>
-        <canvas id="pagCanvas"></canvas>
+        <div id="canvasWrap">
+            <canvas id="pagCanvas"></canvas>
+        </div>
+        <div id="zoomInfo"></div>
         <div id="info"></div>
 
         <!-- Top-right toolbar (like LottieFilesViewer buttonBackgroundColour) -->
@@ -399,14 +422,96 @@
         btnMute.addEventListener('click', function() { isMuted = !isMuted; applyVolume(); });
         volumeSlider.addEventListener('input', function() { volume = volumeSlider.value / 100; isMuted = false; applyVolume(); });
 
+        // --- Canvas zoom (Ctrl+Scroll) + pan (Space+Drag / Middle Drag) ---
+        var canvasWrap = document.getElementById('canvasWrap');
+        var zoomInfoEl = document.getElementById('zoomInfo');
+        var zoomLevel = 1.0;
+        var zoomHideTimer = null;
+        var panX = 0, panY = 0;
+        var isPanning = false;
+        var panStartX = 0, panStartY = 0;
+        var spaceHeld = false;
+
+        function applyTransform() {
+            canvasWrap.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomLevel + ')';
+        }
+
+        function showZoomInfo() {
+            zoomInfoEl.textContent = Math.round(zoomLevel * 100) + '%';
+            zoomInfoEl.style.opacity = '0.9';
+            if (zoomHideTimer) clearTimeout(zoomHideTimer);
+            zoomHideTimer = setTimeout(function() { zoomInfoEl.style.opacity = '0'; }, 600);
+        }
+
+        function resetView() {
+            zoomLevel = 1.0; panX = 0; panY = 0;
+            applyTransform();
+            showZoomInfo();
+        }
+
+        canvasWrap.addEventListener('dblclick', resetView);
+
+        // Ctrl+Scroll to zoom
         document.addEventListener('wheel', function(e) {
-            if (e.deltaY < 0) volume = Math.min(1, volume + 0.04);
-            else volume = Math.max(0, volume - 0.04);
-            isMuted = false; applyVolume(); showControls();
-            volumeLayer.classList.add('show');
-            clearTimeout(hideTimer);
-            hideTimer = setTimeout(function() { volumeLayer.classList.remove('show'); }, 1500);
+            if (e.ctrlKey) {
+                e.preventDefault();
+                var delta = e.deltaY > 0 ? -0.1 : 0.1;
+                zoomLevel = Math.max(0.1, Math.min(5.0, zoomLevel + delta));
+                applyTransform();
+                showZoomInfo();
+                showControls();
+            } else {
+                // Volume control
+                if (e.deltaY < 0) volume = Math.min(1, volume + 0.04);
+                else volume = Math.max(0, volume - 0.04);
+                isMuted = false; applyVolume(); showControls();
+                volumeLayer.classList.add('show');
+                clearTimeout(hideTimer);
+                hideTimer = setTimeout(function() { volumeLayer.classList.remove('show'); }, 1500);
+            }
+        }, { passive: false });
+
+        // Space key hold
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                spaceHeld = true;
+                canvasWrap.classList.add('panning');
+            }
         });
+        document.addEventListener('keyup', function(e) {
+            if (e.code === 'Space') {
+                spaceHeld = false;
+                canvasWrap.classList.remove('panning');
+            }
+        });
+
+        // Pan: Space+Left drag or Middle button drag
+        document.addEventListener('mousedown', function(e) {
+            if ((spaceHeld && e.button === 0) || e.button === 1) {
+                e.preventDefault();
+                isPanning = true;
+                panStartX = e.clientX - panX;
+                panStartY = e.clientY - panY;
+                canvasWrap.classList.add('panning');
+            }
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (isPanning) {
+                panX = e.clientX - panStartX;
+                panY = e.clientY - panStartY;
+                applyTransform();
+            }
+        });
+        document.addEventListener('mouseup', function(e) {
+            if (isPanning && (e.button === 0 || e.button === 1)) {
+                isPanning = false;
+                if (!spaceHeld) canvasWrap.classList.remove('panning');
+            }
+        });
+
+        // Prevent middle-click default scroll
+        document.addEventListener('auxclick', function(e) { if (e.button === 1) e.preventDefault(); });
 
         // --- Load PAG ---
         async function loadFile(base64, libpagSrc, wasmSrc) {
