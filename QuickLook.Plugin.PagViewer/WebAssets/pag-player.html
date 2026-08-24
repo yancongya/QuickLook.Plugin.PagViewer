@@ -8,6 +8,7 @@
             --fg: #cccccc;
             --fg-alt: #888888;
             --accent: #76b9ed;
+            --control-bg: rgba(30,30,30,0.92);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -15,7 +16,6 @@
             background: var(--bg); font-family: 'Segoe UI', sans-serif;
             user-select: none;
         }
-        /* Segoe Fluent Icons */
         .icon { font-family: 'Segoe MDL2 Assets', 'Segoe Fluent Icons'; font-size: 14px; }
 
         #container {
@@ -25,11 +25,11 @@
         }
         #pagCanvas { max-width: 100%; max-height: 100%; }
 
-        /* Control bar - auto hide like VideoViewer */
+        /* Control bar */
         #controls {
             position: absolute; bottom: 0; left: 0; right: 0;
             height: 32px;
-            background: rgba(30,30,30,0.92);
+            background: var(--control-bg);
             display: flex; align-items: center;
             padding: 0 8px;
             opacity: 1;
@@ -38,7 +38,6 @@
         }
         #controls.hidden { opacity: 0; pointer-events: none; }
 
-        /* Buttons - match VideoViewer CaptionButtonStyle */
         .btn {
             background: transparent; border: none; color: var(--fg);
             width: 32px; height: 32px; cursor: pointer;
@@ -51,7 +50,7 @@
         .btn:active { background: rgba(255,255,255,0.12); }
         .btn.active { color: var(--accent); }
 
-        /* Progress bar - match VideoViewer PositionSliderStyle */
+        /* Progress bar */
         #progressWrap {
             flex: 1; height: 10px; margin: 0 6px;
             position: relative; cursor: pointer;
@@ -67,15 +66,13 @@
             height: 1px; background: var(--fg);
             top: 50%; transform: translateY(-50%);
         }
-        /* Thumb - same as VideoViewer PositionSliderThumbTemplate (circle) */
         #progressThumb {
             position: absolute; left: 10px;
             width: 10px; height: 10px;
             border: 1px solid var(--fg);
             border-radius: 50%; background: transparent;
             top: 50%; transform: translate(-50%, -50%);
-            opacity: 0;
-            transition: opacity 0.15s, background 0.15s;
+            opacity: 0; transition: opacity 0.15s, background 0.15s;
             z-index: 2;
         }
         #progressWrap:hover #progressThumb { opacity: 1; }
@@ -83,12 +80,33 @@
         #progressWrap:hover #progressFill { height: 2px; }
         #progressWrap:hover #progressBg { height: 2px; }
 
-        /* Time - match VideoViewer buttonTime style */
         #time {
             color: var(--fg); font-size: 11px;
             font-family: 'Segoe UI', sans-serif;
             min-width: 90px; text-align: center;
             flex-shrink: 0; white-space: nowrap;
+        }
+
+        /* Volume slider popup (like VideoViewer volumeSliderLayer) */
+        #volumeLayer {
+            position: absolute; bottom: 32px; right: 8px;
+            width: 130px; height: 32px;
+            background: var(--control-bg);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.15s;
+            z-index: 11;
+        }
+        #volumeLayer.show { opacity: 1; pointer-events: auto; }
+        #volumeSlider {
+            width: 110px; height: 4px;
+            -webkit-appearance: none; appearance: none;
+            background: rgba(255,255,255,0.2); outline: none;
+            border-radius: 2px; cursor: pointer;
+        }
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 10px; height: 10px;
+            background: var(--fg); border-radius: 50%; cursor: pointer;
         }
 
         /* Status */
@@ -103,8 +121,7 @@
             position: absolute; top: 8px; right: 8px;
             color: var(--fg-alt); font-size: 11px;
             font-family: 'Segoe UI', sans-serif;
-            pointer-events: none;
-            opacity: 0;
+            pointer-events: none; opacity: 0;
             transition: opacity 0.3s;
         }
         #info.show { opacity: 1; }
@@ -115,11 +132,9 @@
         <canvas id="pagCanvas"></canvas>
         <div id="info"></div>
         <div id="controls">
-            <!-- Play/Pause: \xE768=Play \xE769=Pause -->
             <button class="btn" id="btnPlayPause" title="Play / Pause">
                 <span class="icon">&#xE768;</span>
             </button>
-            <!-- Loop: \xE8D8=off \xE777=on (UpdateRestore) -->
             <button class="btn active" id="btnLoop" title="Loop">
                 <span class="icon">&#xE777;</span>
             </button>
@@ -129,6 +144,13 @@
                 <div id="progressThumb"></div>
             </div>
             <span id="time">00:00 / 00:00</span>
+            <!-- Volume: \xE767=Volume3 \xE994=Volume2 \xE993=Volume1 \xE74F=Mute -->
+            <button class="btn" id="btnMute" title="Volume">
+                <span class="icon" id="volumeIcon">&#xE767;</span>
+            </button>
+        </div>
+        <div id="volumeLayer">
+            <input type="range" id="volumeSlider" min="0" max="100" value="100" step="1">
         </div>
         <div id="status">Loading...</div>
     </div>
@@ -140,6 +162,10 @@
         var controls = document.getElementById('controls');
         var btnPlay = document.getElementById('btnPlayPause');
         var btnLoop = document.getElementById('btnLoop');
+        var btnMute = document.getElementById('btnMute');
+        var volumeIcon = document.getElementById('volumeIcon');
+        var volumeLayer = document.getElementById('volumeLayer');
+        var volumeSlider = document.getElementById('volumeSlider');
         var progressWrap = document.getElementById('progressWrap');
         var progressFill = document.getElementById('progressFill');
         var progressThumb = document.getElementById('progressThumb');
@@ -150,14 +176,19 @@
         var isPlaying = false, isLooping = true, isDragging = false;
         var duration = 0;
         var hideTimer = null;
+        var volume = 1.0;
+        var isMuted = false;
 
-        // Segoe Fluent Icons codes
         var ICON_PLAY = '\uE768';
         var ICON_PAUSE = '\uE769';
         var ICON_LOOP_OFF = '\uE8D8';
         var ICON_LOOP_ON = '\uE777';
+        var ICON_VOL3 = '\uE767';
+        var ICON_VOL2 = '\uE994';
+        var ICON_VOL1 = '\uE993';
+        var ICON_VOL0 = '\uE74F';
 
-        // --- Auto-hide controls (like VideoViewer) ---
+        // --- Auto-hide ---
         function showControls() {
             controls.classList.remove('hidden');
             infoEl.classList.add('show');
@@ -167,6 +198,7 @@
             if (isDragging) return;
             controls.classList.add('hidden');
             infoEl.classList.remove('show');
+            volumeLayer.classList.remove('show');
         }
         function resetHideTimer() {
             if (hideTimer) clearTimeout(hideTimer);
@@ -175,7 +207,7 @@
         document.addEventListener('mousemove', showControls);
         document.addEventListener('mousedown', showControls);
 
-        // --- Format time (like VideoViewer TimeTickToShortStringConverter) ---
+        // --- Time format ---
         function fmt(us) {
             var s = us / 1000000;
             var m = Math.floor(s / 60);
@@ -189,7 +221,48 @@
                 window.chrome.webview.postMessage({type:'log', message:msg});
         }
 
-        // --- Load PAG file ---
+        // --- Volume ---
+        function updateVolumeIcon() {
+            var v = isMuted ? 0 : volume;
+            if (v < 0.01) volumeIcon.textContent = ICON_VOL0;
+            else if (v < 0.34) volumeIcon.textContent = ICON_VOL1;
+            else if (v < 0.67) volumeIcon.textContent = ICON_VOL2;
+            else volumeIcon.textContent = ICON_VOL3;
+        }
+
+        function applyVolume() {
+            var v = isMuted ? 0 : volume;
+            volumeSlider.value = Math.round(v * 100);
+            if (pagView && typeof pagView.setVolume === 'function') {
+                pagView.setVolume(v);
+            }
+            updateVolumeIcon();
+        }
+
+        btnMute.addEventListener('click', function() {
+            isMuted = !isMuted;
+            applyVolume();
+        });
+
+        volumeSlider.addEventListener('input', function() {
+            volume = volumeSlider.value / 100;
+            isMuted = false;
+            applyVolume();
+        });
+
+        // Mouse wheel volume control (like VideoViewer)
+        document.addEventListener('wheel', function(e) {
+            if (e.deltaY < 0) volume = Math.min(1, volume + 0.04);
+            else volume = Math.max(0, volume - 0.04);
+            isMuted = false;
+            applyVolume();
+            showControls();
+            volumeLayer.classList.add('show');
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(function() { volumeLayer.classList.remove('show'); }, 1500);
+        });
+
+        // --- Load PAG ---
         async function loadFile(base64, libpagSrc, wasmSrc) {
             try {
                 statusEl.textContent = 'Loading libpag...';
@@ -224,11 +297,11 @@
                 if (!pagView) { statusEl.textContent='Failed to create view'; return; }
 
                 pagView.setRepeatCount(0);
+                applyVolume();
 
                 pagView.addListener('onAnimationUpdate', function() {
                     if (!isDragging && pagView) {
-                        var p = pagView.getProgress();
-                        updateProgress(p);
+                        updateProgress(pagView.getProgress());
                     }
                 });
 
@@ -263,7 +336,7 @@
             btnPlay.querySelector('.icon').textContent = isPlaying ? ICON_PAUSE : ICON_PLAY;
         }
 
-        // --- Progress bar interaction ---
+        // --- Progress interaction ---
         function getProgressFromEvent(e) {
             var rect = progressWrap.getBoundingClientRect();
             return Math.max(0, Math.min(1, (e.clientX - rect.left - 10) / (rect.width - 20)));
@@ -310,7 +383,6 @@
             if (msg.type === 'loadFile') loadFile(msg.base64, msg.libpagSrc, msg.wasmSrc);
         });
 
-        // --- Ready ---
         log('Page ready');
         if (window.chrome && window.chrome.webview)
             window.chrome.webview.postMessage({type:'ready'});
