@@ -183,13 +183,8 @@ namespace QuickLook.Plugin.PagViewer
 
                 Dispatcher.Invoke(() =>
                 {
-                    using (var stream = new FileStream(savePath, FileMode.Open, FileAccess.Read))
-                    {
-                        var decoder = new PngBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-                        var frame = decoder.Frames[0];
-                        frame.Freeze();
-                        Clipboard.SetImage(frame);
-                    }
+                    var fileList = new System.Collections.Specialized.StringCollection { savePath };
+                    Clipboard.SetFileDropList(fileList);
                 });
             }
             catch { }
