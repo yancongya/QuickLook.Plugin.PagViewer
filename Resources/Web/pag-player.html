@@ -353,55 +353,52 @@
         });
 
         // --- Capture current frame (WebGL safe) ---
-        function captureFrame() {
+        function captureFrameAsDataUrl() {
             if (!pagView || !pagFile) return null;
             // Flush to render current frame
             if (typeof pagView.flush === 'function') pagView.flush();
-            // Create temp 2D canvas and copy from WebGL canvas
-            var tmp = document.createElement('canvas');
-            tmp.width = canvas.width;
-            tmp.height = canvas.height;
-            var ctx = tmp.getContext('2d');
-            ctx.drawImage(canvas, 0, 0);
-            return tmp;
+            // Capture synchronously before buffer is cleared
+            try { return canvas.toDataURL('image/png'); } catch(e) { return null; }
+        }
+
+        function dataUrlToBlob(dataUrl) {
+            var parts = dataUrl.split(',');
+            var mime = parts[0].match(/:(.*?);/)[1];
+            var raw = atob(parts[1]);
+            var arr = new Uint8Array(raw.length);
+            for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+            return new Blob([arr], { type: mime });
         }
 
         // --- Save image ---
         btnSave.addEventListener('click', function() {
-            var tmp = captureFrame();
-            if (!tmp) return;
-            tmp.toBlob(function(blob) {
-                if (!blob) { showToast('Save failed'); return; }
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'pag-frame-' + Date.now() + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                showToast('Saved');
-            }, 'image/png');
+            var dataUrl = captureFrameAsDataUrl();
+            if (!dataUrl) { showToast('Save failed'); return; }
+            var a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = 'pag-frame-' + Date.now() + '.png';
+            a.click();
+            showToast('Saved');
         });
 
         // --- Copy to clipboard (Ctrl+C) ---
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'c') {
                 e.preventDefault();
-                var tmp = captureFrame();
-                if (!tmp) return;
+                var dataUrl = captureFrameAsDataUrl();
+                if (!dataUrl) return;
                 if (!navigator.clipboard || !window.ClipboardItem) {
                     showToast('Copy not supported');
                     return;
                 }
-                tmp.toBlob(function(blob) {
-                    if (!blob) { showToast('Copy failed'); return; }
-                    navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': blob })
-                    ]).then(function() {
-                        showToast('Copied');
-                    }).catch(function() {
-                        showToast('Copy failed');
-                    });
-                }, 'image/png');
+                var blob = dataUrlToBlob(dataUrl);
+                navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]).then(function() {
+                    showToast('Copied');
+                }).catch(function() {
+                    showToast('Copy failed');
+                });
             }
         });
 
