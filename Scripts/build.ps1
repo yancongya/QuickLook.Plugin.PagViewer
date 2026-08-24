@@ -1,13 +1,20 @@
 # Build and package QuickLook.Plugin.PagViewer
 param(
     [switch]$Clean,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [switch]$SkipVersion
 )
 
 $ErrorActionPreference = "Stop"
 $project = "QuickLook.Plugin.PagViewer.csproj"
 $releaseDir = "bin/Release"
 $pluginFile = "QuickLook.Plugin.PagViewer.qlplugin"
+
+# Update version
+if (-not $SkipVersion) {
+    Write-Host "Updating version..." -ForegroundColor Yellow
+    powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\update-version.ps1"
+}
 
 # Clean
 if ($Clean) {

@@ -21,11 +21,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
+      - name: Update version from git tag
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File Scripts/update-version.ps1
 
       - name: Build
         run: dotnet build -c ${{env.BUILD_CONFIGURATION}}
