@@ -14,19 +14,24 @@ PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频�
 
 ### 功能特性
 
-- 实时 PAG 动画播放
-- 播放/暂停、循环切换、进度条拖拽
-- 音量控制（静音、滑块、滚轮调节）
+- 实时 PAG 动画播放（自动循环）
+- 播放/暂停、进度条拖拽
+- 音量控制（按钮、滑块、滚轮调节）
 - 画布缩放（Ctrl+滚轮，0.1x ~ 5x）
 - 画布拖拽（左键长按）
 - 背景切换（默认/棋盘格/白色/黑色/自定义颜色）
+- 文件信息面板（悬停显示尺寸、时长、帧率、图层数等）
+- 保存为 PNG（保存到 PAG 文件旁边）
+- 复制文件到剪贴板
+- 窗口拖拽（点击背景区域）
 - 自动隐藏控制栏
 - 适配 QuickLook 暗色/亮色主题
+- 中英双语支持（自动检测系统语言）
 - 使用 Segoe Fluent Icons 图标
 
 ### 安装
 
-1. 从 [Releases](https://github.com/your-username/QuickLook.Plugin.PagViewer/releases) 下载 `.qlplugin` 文件
+1. 从 [Releases](https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases) 下载 `.qlplugin` 文件
 2. 确保 QuickLook 正在运行
 3. 选中 `.qlplugin` 文件，按空格键预览
 4. 点击"安装"按钮
@@ -41,7 +46,7 @@ PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频�
 ### 从源码构建
 
 ```bash
-git clone https://github.com/your-username/QuickLook.Plugin.PagViewer.git
+git clone https://github.com/yancongya/QuickLook.Plugin.PagViewer.git
 cd QuickLook.Plugin.PagViewer
 dotnet build -c Release
 ```
@@ -49,7 +54,7 @@ dotnet build -c Release
 打包为 `.qlplugin`：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File Scripts/pack-zip.ps1
+powershell -ExecutionPolicy Bypass -File Scripts/build.ps1
 ```
 
 ### 快捷键
@@ -58,12 +63,14 @@ powershell -ExecutionPolicy Bypass -File Scripts/pack-zip.ps1
 |------|--------|
 | 播放/暂停 | 点击按钮 |
 | 跳转 | 点击/拖拽进度条 |
-| 循环切换 | 点击按钮 |
 | 音量 | 鼠标滚轮 |
 | 静音 | 点击按钮 |
 | 缩放 | Ctrl + 滚轮 |
 | 拖拽画布 | 左键长按 |
 | 重置视图 | 双击画布 |
+| 文件信息 | 悬停信息按钮 |
+| 保存 PNG | 点击保存按钮 |
+| 复制文件 | Ctrl + C |
 | 背景色选择器 | 右键点击背景按钮 |
 
 ### 项目结构
@@ -76,6 +83,7 @@ powershell -ExecutionPolicy Bypass -File Scripts/pack-zip.ps1
 │   ├── libpag.min.js              # PAG Web SDK
 │   ├── libpag.wasm                # PAG WebAssembly 引擎
 │   └── pag-player.html            # 播放器 UI
+├── Translations.config            # 中英文翻译
 ├── Properties/
 ├── Scripts/
 └── *.csproj / *.sln
@@ -93,19 +101,24 @@ PAG is an open-source cross-platform animation format by Tencent, widely used in
 
 ### Features
 
-- Real-time PAG animation playback
-- Play/Pause, Loop toggle, Progress bar with seek
-- Volume control (Mute, slider, mouse wheel)
+- Real-time PAG animation playback (auto loop)
+- Play/Pause, Progress bar with seek
+- Volume control (button, slider, mouse wheel)
 - Canvas zoom (Ctrl+Scroll, 0.1x ~ 5x)
 - Canvas pan (left-click drag)
 - Background switcher (Default / Checkerboard / White / Black / Custom color)
+- File info panel (hover to show dimensions, duration, FPS, layers, etc.)
+- Save as PNG (saves next to PAG file)
+- Copy file to clipboard
+- Window drag (click background area)
 - Auto-hide control bar
 - QuickLook Dark/Light theme support
+- Bilingual support (Chinese/English, auto-detect system language)
 - Segoe Fluent Icons
 
 ### Installation
 
-1. Download `.qlplugin` from [Releases](https://github.com/your-username/QuickLook.Plugin.PagViewer/releases)
+1. Download `.qlplugin` from [Releases](https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases)
 2. Ensure QuickLook is running
 3. Select the `.qlplugin` file and press Space
 4. Click "Install"
@@ -120,7 +133,7 @@ PAG is an open-source cross-platform animation format by Tencent, widely used in
 ### Build from source
 
 ```bash
-git clone https://github.com/your-username/QuickLook.Plugin.PagViewer.git
+git clone https://github.com/yancongya/QuickLook.Plugin.PagViewer.git
 cd QuickLook.Plugin.PagViewer
 dotnet build -c Release
 ```
@@ -128,7 +141,7 @@ dotnet build -c Release
 Package as `.qlplugin`:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File Scripts/pack-zip.ps1
+powershell -ExecutionPolicy Bypass -File Scripts/build.ps1
 ```
 
 ### Keyboard & Mouse Shortcuts
@@ -137,12 +150,14 @@ powershell -ExecutionPolicy Bypass -File Scripts/pack-zip.ps1
 |--------|----------|
 | Play / Pause | Click button |
 | Seek | Click/drag progress bar |
-| Loop toggle | Click button |
 | Volume | Mouse wheel |
 | Mute | Click button |
 | Zoom in/out | Ctrl + Scroll |
 | Pan canvas | Left-click drag |
 | Reset view | Double-click canvas |
+| File info | Hover info button |
+| Save PNG | Click save button |
+| Copy file | Ctrl + C |
 | Background picker | Right-click background button |
 
 ### Project Structure
@@ -155,12 +170,17 @@ powershell -ExecutionPolicy Bypass -File Scripts/pack-zip.ps1
 │   ├── libpag.min.js              # PAG Web SDK
 │   ├── libpag.wasm                # PAG WebAssembly engine
 │   └── pag-player.html            # Player UI
+├── Translations.config            # i18n translations
 ├── Properties/
 ├── Scripts/
 └── *.csproj / *.sln
 ```
 
 ---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md)
 
 ## Credits
 
