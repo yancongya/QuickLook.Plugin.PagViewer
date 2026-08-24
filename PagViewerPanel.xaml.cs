@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using QuickLook.Common.Plugin;
@@ -146,6 +147,16 @@ namespace QuickLook.Plugin.PagViewer
                 {
                     Dispatcher.Invoke(() => StartWindowDrag());
                 }
+                else if (type == "copyImage")
+                {
+                    var base64 = msg.GetProperty("data").GetString();
+                    Dispatcher.Invoke(() => CopyImageToClipboard(base64));
+                }
+                else if (type == "saveImage")
+                {
+                    var base64 = msg.GetProperty("data").GetString();
+                    Dispatcher.Invoke(() => SaveImage(base64));
+                }
             }
             catch { }
         }
@@ -156,6 +167,43 @@ namespace QuickLook.Plugin.PagViewer
             var helper = new System.Windows.Interop.WindowInteropHelper(_hostWindow);
             ReleaseCapture();
             SendMessage(helper.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        }
+
+        private void CopyImageToClipboard(string base64)
+        {
+            try
+            {
+                var bytes = Convert.FromBase64String(base64);
+                var tempFile = Path.Combine(Path.GetTempPath(), "pag-clipboard-" + DateTime.Now.Ticks + ".png");
+                File.WriteAllBytes(tempFile, bytes);
+
+                Dispatcher.Invoke(() =>
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(tempFile);
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    Clipboard.SetImage(bitmap);
+                });
+            }
+            catch { }
+        }
+
+        private void SaveImage(string base64)
+        {
+            try
+            {
+                var bytes = Convert.FromBase64String(base64);
+                var pagDir = Path.GetDirectoryName(_pagFilePath) ?? "";
+                var baseName = Path.GetFileNameWithoutExtension(_pagFilePath);
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var savePath = Path.Combine(pagDir, $"{baseName}_{timestamp}.png");
+
+                File.WriteAllBytes(savePath, bytes);
+            }
+            catch { }
         }
 
         private async Task ApplyTheme()

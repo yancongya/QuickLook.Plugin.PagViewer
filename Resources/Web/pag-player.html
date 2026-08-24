@@ -375,37 +375,33 @@
             return tmp;
         }
 
-        // --- Save image ---
-        btnSave.addEventListener('click', function() {
+        function captureAsBase64() {
             var tmp = captureCanvas();
-            if (!tmp) { showToast('Save failed'); return; }
-            var a = document.createElement('a');
-            a.href = tmp.toDataURL('image/png');
-            a.download = 'pag-frame-' + Date.now() + '.png';
-            a.click();
-            showToast('Saved');
+            if (!tmp) return null;
+            var dataUrl = tmp.toDataURL('image/png');
+            return dataUrl.split(',')[1]; // Remove data:image/png;base64, prefix
+        }
+
+        // --- Save image (save next to PAG file) ---
+        btnSave.addEventListener('click', function() {
+            var base64 = captureAsBase64();
+            if (!base64) { showToast('Save failed'); return; }
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({type: 'saveImage', data: base64});
+                showToast('Saved');
+            }
         });
 
         // --- Copy to clipboard (Ctrl+C) ---
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'c') {
                 e.preventDefault();
-                var tmp = captureCanvas();
-                if (!tmp) return;
-                if (!navigator.clipboard || !window.ClipboardItem) {
-                    showToast('Copy not supported');
-                    return;
+                var base64 = captureAsBase64();
+                if (!base64) return;
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({type: 'copyImage', data: base64});
+                    showToast('Copied');
                 }
-                tmp.toBlob(function(blob) {
-                    if (!blob) { showToast('Copy failed'); return; }
-                    navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': blob })
-                    ]).then(function() {
-                        showToast('Copied');
-                    }).catch(function() {
-                        showToast('Copy failed');
-                    });
-                }, 'image/png');
             }
         });
 
