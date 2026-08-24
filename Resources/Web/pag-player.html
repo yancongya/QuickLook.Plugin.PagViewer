@@ -25,10 +25,7 @@
         }
 
         /* Background layer */
-        #bgLayer {
-            position: absolute; inset: 0; z-index: 0;
-        }
-        /* Checkerboard pattern (like LottieFilesViewer) */
+        #bgLayer { position: absolute; inset: 0; z-index: 0; }
         #bgLayer.checker {
             background-color: #ffffff;
             background-image:
@@ -60,23 +57,21 @@
             transform-origin: center center;
         }
 
-        /* Zoom level indicator (like LottieFilesViewer zoomLevelInfo) */
+        /* Zoom level indicator */
         #zoomInfo {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(80,80,80,0.9); color: #fff;
             padding: 4px 14px; border-radius: 5px;
             font-size: 18px; pointer-events: none;
-            opacity: 0; z-index: 20;
-            transition: opacity 0.2s;
+            opacity: 0; z-index: 20; transition: opacity 0.2s;
         }
 
-        /* Top-right toolbar (like LottieFilesViewer) */
+        /* Top-right toolbar */
         #topBar {
             position: absolute; top: 8px; right: 8px;
             display: flex; gap: 4px;
-            z-index: 20;
-            opacity: 1; transition: opacity 0.3s;
+            z-index: 20; opacity: 1; transition: opacity 0.3s;
         }
         #topBar.hidden { opacity: 0; pointer-events: none; }
         #topBar .btn {
@@ -87,6 +82,18 @@
         }
         #topBar .btn:hover { background: rgba(255,255,255,0.1); }
         #topBar .btn .icon { font-size: 12px; }
+
+        /* Metadata panel (like LottieFilesViewer textMeta) */
+        #metaPanel {
+            position: absolute; top: 36px; right: 8px;
+            background: var(--control-bg);
+            padding: 8px 12px; border-radius: 4px;
+            color: var(--fg); font-size: 11px;
+            line-height: 1.8; z-index: 21;
+            display: none; white-space: nowrap;
+        }
+        #metaPanel.show { display: block; }
+        #metaPanel .label { color: var(--fg-alt); }
 
         /* Color picker popup */
         #colorPicker {
@@ -101,9 +108,7 @@
             width: 100%; height: 28px; border: none;
             cursor: pointer; background: transparent;
         }
-        .colorSwatches {
-            display: flex; gap: 4px;
-        }
+        .colorSwatches { display: flex; gap: 4px; }
         .swatch {
             width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.2);
             cursor: pointer; border-radius: 2px;
@@ -113,12 +118,9 @@
         /* Control bar */
         #controls {
             position: absolute; bottom: 0; left: 0; right: 0;
-            height: 32px;
-            background: var(--control-bg);
-            display: flex; align-items: center;
-            padding: 0 8px;
-            opacity: 1; transition: opacity 0.3s ease;
-            z-index: 10;
+            height: 32px; background: var(--control-bg);
+            display: flex; align-items: center; padding: 0 8px;
+            opacity: 1; transition: opacity 0.3s ease; z-index: 10;
         }
         #controls.hidden { opacity: 0; pointer-events: none; }
 
@@ -126,8 +128,7 @@
             background: transparent; border: none; color: var(--fg);
             width: 32px; height: 32px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 2px; transition: background 0.1s;
-            flex-shrink: 0;
+            border-radius: 2px; transition: background 0.1s; flex-shrink: 0;
         }
         .btn:hover { background: rgba(255,255,255,0.08); }
         .btn:active { background: rgba(255,255,255,0.12); }
@@ -152,11 +153,10 @@
         #progressThumb {
             position: absolute; left: 10px;
             width: 10px; height: 10px;
-            border: 1px solid var(--fg);
-            border-radius: 50%; background: transparent;
+            border: 1px solid var(--fg); border-radius: 50%;
+            background: transparent;
             top: 50%; transform: translate(-50%, -50%);
-            opacity: 0; transition: opacity 0.15s, background 0.15s;
-            z-index: 2;
+            opacity: 0; transition: opacity 0.15s, background 0.15s; z-index: 2;
         }
         #progressWrap:hover #progressThumb { opacity: 1; }
         #progressWrap.dragging #progressThumb { opacity: 1; background: var(--fg); }
@@ -205,6 +205,17 @@
             transition: opacity 0.3s; z-index: 2;
         }
         #info.show { opacity: 1; }
+
+        /* Toast notification */
+        #toast {
+            position: absolute; bottom: 44px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(80,80,80,0.95); color: #fff;
+            padding: 6px 16px; border-radius: 4px;
+            font-size: 12px; pointer-events: none;
+            opacity: 0; z-index: 30; transition: opacity 0.3s;
+        }
+        #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
@@ -215,14 +226,24 @@
         </div>
         <div id="zoomInfo"></div>
         <div id="info"></div>
+        <div id="toast"></div>
 
-        <!-- Top-right toolbar (like LottieFilesViewer buttonBackgroundColour) -->
+        <!-- Top-right toolbar -->
         <div id="topBar">
+            <!-- \xE792 = Info -->
+            <button class="btn" id="btnMeta" title="Info">
+                <span class="icon">&#xE946;</span>
+            </button>
+            <!-- \xE74B = Save -->
+            <button class="btn" id="btnSave" title="Save as PNG">
+                <span class="icon">&#xE74B;</span>
+            </button>
             <!-- \xEF1F = BackgroundToggle -->
             <button class="btn" id="btnBg" title="Background">
                 <span class="icon">&#xEF1F;</span>
             </button>
         </div>
+        <div id="metaPanel"></div>
         <div id="colorPicker">
             <div class="colorSwatches">
                 <div class="swatch" data-bg="default" style="background:var(--bg)" title="Default"></div>
@@ -267,6 +288,9 @@
         var btnLoop = document.getElementById('btnLoop');
         var btnMute = document.getElementById('btnMute');
         var btnBg = document.getElementById('btnBg');
+        var btnMeta = document.getElementById('btnMeta');
+        var btnSave = document.getElementById('btnSave');
+        var metaPanel = document.getElementById('metaPanel');
         var colorPicker = document.getElementById('colorPicker');
         var customColor = document.getElementById('customColor');
         var volumeIcon = document.getElementById('volumeIcon');
@@ -277,13 +301,15 @@
         var progressThumb = document.getElementById('progressThumb');
         var timeEl = document.getElementById('time');
         var infoEl = document.getElementById('info');
+        var toastEl = document.getElementById('toast');
 
         var pag = null, pagFile = null, pagView = null;
         var isPlaying = false, isLooping = true, isDragging = false;
-        var duration = 0;
+        var duration = 0, pagWidth = 0, pagHeight = 0;
         var hideTimer = null;
         var volume = 1.0;
         var isMuted = false;
+        var pagMeta = null;
 
         var ICON_PLAY = '\uE768';
         var ICON_PAUSE = '\uE769';
@@ -294,6 +320,85 @@
         var ICON_VOL1 = '\uE993';
         var ICON_VOL0 = '\uE74F';
 
+        // --- Toast ---
+        var toastTimer = null;
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toastEl.classList.remove('show'); }, 1500);
+        }
+
+        // --- Metadata panel (like LottieFilesViewer textMeta) ---
+        function updateMetaPanel() {
+            if (!pagMeta) return;
+            var fps = pagMeta.fps || 30;
+            var dur = (duration / 1000000).toFixed(2);
+            metaPanel.innerHTML =
+                '<span class="label">Width: </span>' + pagWidth + 'px<br>' +
+                '<span class="label">Height: </span>' + pagHeight + 'px<br>' +
+                '<span class="label">Duration: </span>' + dur + 's<br>' +
+                '<span class="label">FPS: </span>' + fps + '<br>' +
+                '<span class="label">Layers: </span>' + (pagMeta.numLayers || '-') + '<br>' +
+                '<span class="label">Images: </span>' + (pagMeta.numImages || '-') + '<br>' +
+                '<span class="label">Texts: </span>' + (pagMeta.numTexts || '-');
+        }
+
+        btnMeta.addEventListener('mouseenter', function() {
+            updateMetaPanel();
+            metaPanel.classList.add('show');
+        });
+        btnMeta.addEventListener('mouseleave', function() {
+            metaPanel.classList.remove('show');
+        });
+
+        // --- Save image (like VideoViewer, ImageViewer) ---
+        btnSave.addEventListener('click', function() {
+            saveCurrentFrame();
+        });
+
+        function saveCurrentFrame() {
+            if (!pagView) return;
+            // Flush to ensure current frame is rendered
+            if (typeof pagView.flush === 'function') pagView.flush();
+            canvas.toBlob(function(blob) {
+                if (!blob) return;
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'pag-frame-' + Date.now() + '.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Saved');
+            }, 'image/png');
+        }
+
+        // --- Copy to clipboard (Ctrl+C) ---
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'c') {
+                e.preventDefault();
+                copyCurrentFrame();
+            }
+        });
+
+        function copyCurrentFrame() {
+            if (!pagView) return;
+            if (typeof pagView.flush === 'function') pagView.flush();
+            canvas.toBlob(function(blob) {
+                if (!blob || !navigator.clipboard || !window.ClipboardItem) {
+                    showToast('Copy not supported');
+                    return;
+                }
+                navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]).then(function() {
+                    showToast('Copied');
+                }).catch(function() {
+                    showToast('Copy failed');
+                });
+            }, 'image/png');
+        }
+
         // --- Background switcher ---
         var BG_MODES = ['default', 'checker', 'white', 'black'];
         var bgIndex = parseInt(localStorage.getItem('pag-bg-index') || '0');
@@ -303,67 +408,43 @@
             var mode = BG_MODES[bgIndex];
             bgLayer.className = mode;
             if (mode === 'checker') {
-                // Detect if theme is dark
                 var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
                 if (bg === '#202020' || bg === '#1a1a1a') bgLayer.classList.add('dark');
             }
-            if (mode === 'default') {
-                bgLayer.style.background = '';
-            } else if (mode === 'checker') {
-                bgLayer.style.background = '';
-            } else {
-                bgLayer.style.background = mode;
-            }
+            bgLayer.style.background = (mode === 'default' || mode === 'checker') ? '' : mode;
             customColor.value = customBgColor;
             localStorage.setItem('pag-bg-index', bgIndex);
         }
 
-        function cycleBg() {
-            bgIndex = (bgIndex + 1) % BG_MODES.length;
-            applyBg();
-        }
+        function cycleBg() { bgIndex = (bgIndex + 1) % BG_MODES.length; applyBg(); }
 
-        // Swatch clicks
         document.querySelectorAll('.swatch').forEach(function(el) {
             el.addEventListener('click', function() {
                 bgIndex = BG_MODES.indexOf(el.dataset.bg);
-                applyBg();
-                colorPicker.classList.remove('show');
+                applyBg(); colorPicker.classList.remove('show');
             });
         });
 
-        // Custom color picker
         customColor.addEventListener('input', function() {
             customBgColor = customColor.value;
-            bgLayer.className = '';
-            bgLayer.style.background = customBgColor;
+            bgLayer.className = ''; bgLayer.style.background = customBgColor;
             localStorage.setItem('pag-bg-custom', customBgColor);
-            bgIndex = -1;
-            localStorage.setItem('pag-bg-index', '-1');
+            bgIndex = -1; localStorage.setItem('pag-bg-index', '-1');
         });
 
-        // Background button: click = cycle, right-click = show picker
-        btnBg.addEventListener('click', function(e) {
-            cycleBg();
-        });
+        btnBg.addEventListener('click', function() { cycleBg(); });
         btnBg.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            colorPicker.classList.toggle('show');
+            e.preventDefault(); colorPicker.classList.toggle('show');
         });
-        // Close picker on outside click
         document.addEventListener('click', function(e) {
-            if (!colorPicker.contains(e.target) && e.target !== btnBg && !btnBg.contains(e.target)) {
+            if (!colorPicker.contains(e.target) && e.target !== btnBg && !btnBg.contains(e.target))
                 colorPicker.classList.remove('show');
-            }
+            if (!metaPanel.contains(e.target) && e.target !== btnMeta && !btnMeta.contains(e.target))
+                metaPanel.classList.remove('show');
         });
 
-        // Restore saved background
-        if (bgIndex < 0) {
-            bgLayer.className = '';
-            bgLayer.style.background = customBgColor;
-        } else {
-            applyBg();
-        }
+        if (bgIndex < 0) { bgLayer.className = ''; bgLayer.style.background = customBgColor; }
+        else applyBg();
 
         // --- Auto-hide ---
         function showControls() {
@@ -379,6 +460,7 @@
             infoEl.classList.remove('show');
             volumeLayer.classList.remove('show');
             colorPicker.classList.remove('show');
+            metaPanel.classList.remove('show');
         }
         function resetHideTimer() {
             if (hideTimer) clearTimeout(hideTimer);
@@ -420,7 +502,23 @@
         btnMute.addEventListener('click', function() { isMuted = !isMuted; applyVolume(); });
         volumeSlider.addEventListener('input', function() { volume = volumeSlider.value / 100; isMuted = false; applyVolume(); });
 
-        // --- Canvas zoom (Ctrl+Scroll) + pan (Space+Drag / Middle Drag) ---
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                var delta = e.deltaY > 0 ? -0.1 : 0.1;
+                zoomLevel = Math.max(0.1, Math.min(5.0, zoomLevel + delta));
+                applyTransform(); showZoomInfo(); showControls();
+            } else {
+                if (e.deltaY < 0) volume = Math.min(1, volume + 0.04);
+                else volume = Math.max(0, volume - 0.04);
+                isMuted = false; applyVolume(); showControls();
+                volumeLayer.classList.add('show');
+                clearTimeout(hideTimer);
+                hideTimer = setTimeout(function() { volumeLayer.classList.remove('show'); }, 1500);
+            }
+        }, { passive: false });
+
+        // --- Canvas zoom + pan ---
         var canvasWrap = document.getElementById('canvasWrap');
         var zoomInfoEl = document.getElementById('zoomInfo');
         var zoomLevel = 1.0;
@@ -442,33 +540,11 @@
 
         function resetView() {
             zoomLevel = 1.0; panX = 0; panY = 0;
-            applyTransform();
-            showZoomInfo();
+            applyTransform(); showZoomInfo();
         }
 
         canvasWrap.addEventListener('dblclick', resetView);
 
-        // Ctrl+Scroll to zoom
-        document.addEventListener('wheel', function(e) {
-            if (e.ctrlKey) {
-                e.preventDefault();
-                var delta = e.deltaY > 0 ? -0.1 : 0.1;
-                zoomLevel = Math.max(0.1, Math.min(5.0, zoomLevel + delta));
-                applyTransform();
-                showZoomInfo();
-                showControls();
-            } else {
-                // Volume control
-                if (e.deltaY < 0) volume = Math.min(1, volume + 0.04);
-                else volume = Math.max(0, volume - 0.04);
-                isMuted = false; applyVolume(); showControls();
-                volumeLayer.classList.add('show');
-                clearTimeout(hideTimer);
-                hideTimer = setTimeout(function() { volumeLayer.classList.remove('show'); }, 1500);
-            }
-        }, { passive: false });
-
-        // Pan: left-click drag on canvas
         canvas.addEventListener('mousedown', function(e) {
             if (e.button === 0) {
                 isPanning = true;
@@ -486,9 +562,15 @@
             }
         });
         document.addEventListener('mouseup', function() {
-            if (isPanning) {
-                isPanning = false;
-                canvas.style.cursor = '';
+            if (isPanning) { isPanning = false; canvas.style.cursor = ''; }
+        });
+
+        // --- Window drag (click on background area) ---
+        bgLayer.addEventListener('mousedown', function(e) {
+            if (e.button === 0) {
+                e.preventDefault();
+                if (window.chrome && window.chrome.webview)
+                    window.chrome.webview.postMessage({type: 'startDrag'});
             }
         });
 
@@ -517,9 +599,19 @@
                 if (!pagFile) { statusEl.textContent='Invalid PAG file'; return; }
 
                 duration = pagFile.duration();
-                var w = pagFile.width(), h = pagFile.height();
-                infoEl.textContent = w + '\u00d7' + h;
-                canvas.width = w; canvas.height = h;
+                pagWidth = pagFile.width();
+                pagHeight = pagFile.height();
+                infoEl.textContent = pagWidth + '\u00d7' + pagHeight;
+                canvas.width = pagWidth; canvas.height = pagHeight;
+
+                // Collect metadata
+                pagMeta = {
+                    fps: typeof pagFile.fps === 'function' ? pagFile.fps() : 30,
+                    numLayers: typeof pagFile.numLayers === 'function' ? pagFile.numLayers() : (typeof pagFile.numChildren === 'function' ? pagFile.numChildren() : null),
+                    numImages: typeof pagFile.numImages === 'function' ? pagFile.numImages() : null,
+                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : null
+                };
+                log('Meta: ' + JSON.stringify(pagMeta));
 
                 pagView = await pag.PAGView.init(pagFile, canvas, {useScale:false});
                 if (!pagView) { statusEl.textContent='Failed to create view'; return; }
@@ -539,7 +631,7 @@
                 log('Playing');
 
                 if (window.chrome && window.chrome.webview)
-                    window.chrome.webview.postMessage({type:'loaded', width:w, height:h});
+                    window.chrome.webview.postMessage({type:'loaded', width:pagWidth, height:pagHeight});
             } catch(err) {
                 statusEl.textContent = 'Error: ' + err.message;
                 log('Error: ' + err.message);

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,6 +19,16 @@ namespace QuickLook.Plugin.PagViewer
         private readonly string _webAssetsDir;
         private WebView2 _webView;
         private Themes _theme = Themes.Dark;
+        private Window _hostWindow;
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
+
+        private const int WM_NCLBUTTONDOWN = 0xA1;
+        private const int HTCAPTION = 0x2;
 
         public PagViewerPanel()
         {
@@ -89,9 +100,9 @@ namespace QuickLook.Plugin.PagViewer
 
                 _webView.CoreWebView2.Navigate(htmlPath);
 
-                var window = Window.GetWindow(this);
-                if (window != null)
-                    window.DpiChanged += OnDpiChanged;
+                _hostWindow = Window.GetWindow(this);
+                if (_hostWindow != null)
+                    _hostWindow.DpiChanged += OnDpiChanged;
             }
             catch (Exception ex)
             {
@@ -131,13 +142,24 @@ namespace QuickLook.Plugin.PagViewer
                     var message = msg.TryGetProperty("message", out var m) ? m.GetString() : "Unknown error";
                     Dispatcher.Invoke(() => ShowError($"PAG Error: {message}"));
                 }
+                else if (type == "startDrag")
+                {
+                    Dispatcher.Invoke(() => StartWindowDrag());
+                }
             }
             catch { }
         }
 
+        private void StartWindowDrag()
+        {
+            if (_hostWindow == null) return;
+            var helper = new System.Windows.Interop.WindowInteropHelper(_hostWindow);
+            ReleaseCapture();
+            SendMessage(helper.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        }
+
         private async Task ApplyTheme()
         {
-            // Match VideoViewer's DynamicResource colors
             string bg, fg, fgAlt;
             if (_theme == Themes.Light)
             {
@@ -223,9 +245,8 @@ namespace QuickLook.Plugin.PagViewer
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            var window = Window.GetWindow(this);
-            if (window != null)
-                window.DpiChanged -= OnDpiChanged;
+            if (_hostWindow != null)
+                _hostWindow.DpiChanged -= OnDpiChanged;
 
             Dispose();
         }
