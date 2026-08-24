@@ -616,6 +616,15 @@
                 };
                 log('Meta: ' + JSON.stringify(pagMeta));
 
+                // Force preserveDrawingBuffer for frame capture
+                var origGetContext = canvas.getContext.bind(canvas);
+                canvas.getContext = function(type, attrs) {
+                    if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+                        attrs = Object.assign({}, attrs || {}, { preserveDrawingBuffer: true, premultipliedAlpha: false });
+                    }
+                    return origGetContext(type, attrs);
+                };
+
                 pagView = await pag.PAGView.init(pagFile, canvas, {useScale:false});
                 if (!pagView) { statusEl.textContent='Failed to create view'; return; }
                 pagView.setRepeatCount(0);
