@@ -486,5 +486,126 @@ I'd like to add my {Format} viewer plugin to the Available Plugins list.
 - 开发文档：https://github.com/QL-Win/QuickLook/wiki/Develop,-build-and-integrate
 - HelloWorld 模板：https://github.com/QL-Win/QuickLook.Plugin.HelloWorld
 - PagViewer 参考：https://github.com/yancongya/QuickLook.Plugin.PagViewer
+- SvgaViewer 参考：https://github.com/yancongya/QuickLook.Plugin.SvgaViewer
 - IViewer 接口：https://github.com/QL-Win/QuickLook.Common/blob/master/Plugin/IViewer.cs
+
+## 实战经验（PagViewer + SvgaViewer 总结）
+
+### WebView2 关键配置
+
+```csharp
+// 必须禁用 WebView2 自带缩放
+_webView.CoreWebView2.Settings.IsZoomControlEnabled = false;
+
+// 使用 virtual host 加载本地资源（避免 file:// 安全问题）
+_webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+    "assets.local", _webAssetsDir, CoreWebView2HostResourceAccessKind.Allow);
+
+// 拦截外部导航
+_webView.CoreWebView2.NavigationStarting += (s, e) => {
+    if (!e.Uri.StartsWith("https://assets.local/") && !e.Uri.StartsWith("file:"))
+        e.Cancel = true;
+};
+```
+
+### 文件加载最佳实践
+
+```csharp
+// C# 端：读取字节 → base64 → 传给 WebView
+var bytes = File.ReadAllBytes(path);
+var base64 = Convert.ToBase64String(bytes);
+var msg = JsonSerializer.Serialize(new { type = "loadFile", base64 = base64 });
+await _webView.CoreWebView2.ExecuteScriptAsync("window.postMessage(" + msg + ", '*');");
+```
+
+```javascript
+// JS 端：接收 base64 → 转 ArrayBuffer/Blob
+var raw = atob(base64);
+var buf = new Uint8Array(raw.length);
+for (var i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+// 根据 SDK 要求选择传递方式：
+// 1. ArrayBuffer: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+// 2. Blob URL: URL.createObjectURL(new Blob([buf]))
+// 3. Data URI: 'data:svga/1.0;base64,' + base64
+```
+
+### Canvas 缩放陷阱
+
+```css
+/* ❌ object-fit 对 canvas 不生效 */
+#canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* ✅ 需要手动计算缩放 */
+function fitCanvasToContainer() {
+    var scaleX = container.clientWidth / canvas.width;
+    var scaleY = container.clientHeight / canvas.height;
+    var scale = Math.min(scaleX, scaleY);
+    canvas.style.width = Math.floor(canvas.width * scale) + 'px';
+    canvas.style.height = Math.floor(canvas.height * scale) + 'px';
+}
+```
+
+### SVGA 格式特殊处理
+
+```javascript
+// 1.x 和 2.x 属性名不同
+var fps = videoItem.FPS || videoItem.fps || 20;           // 1.x: FPS, 2.x: fps
+var size = videoItem.videoSize || videoItem.size || {};   // 1.x: videoSize, 2.x: size
+
+// 1.x 需要 JSZip + JSZipUtils（两个都需要！）
+<script src="jszip.min.js"></script>
+<script src="jszip-utils.min.js"></script>  <!-- 必须！SVGAPlayer-Web 检测两个全局变量 -->
+<script src="svga.min.js"></script>
+
+// 1.x 使用 data URI 格式
+var dataUri = 'data:svga/1.0;base64,' + base64;
+parser.load(dataUri, success, failure);
+
+// 2.x 图片是 Uint8Array，不是 base64 字符串
+if (typeof imgData === 'string') {
+    imgSize = imgData.length * 0.75;  // 1.x base64
+} else if (imgData instanceof Uint8Array) {
+    imgSize = imgData.length;          // 2.x binary
+    base64Data = btoa(String.fromCharCode.apply(null, imgData));
+}
+```
+
+### 元数据面板最佳实践
+
+```javascript
+// 点击固定 + 高亮状态（使用 pinned 类，不要用 active）
+var metaPinned = false;
+btnMeta.addEventListener('click', function(e) {
+    e.stopPropagation();
+    metaPinned = !metaPinned;
+    btnMeta.classList.toggle('pinned', metaPinned);
+    // ...
+});
+
+// 自定义滚动条
+#metaPanel::-webkit-scrollbar { width: 4px; }
+#metaPanel::-webkit-scrollbar-track { background: transparent; }
+#metaPanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+```
+
+### 双语支持
+
+```xml
+<!-- Metadata.config: 单字段双语 -->
+<Description>Preview PAG files. 预览 PAG 动画文件。</Description>
+
+<!-- Translations.config: 中英分开 -->
+<Entry Key="BTN_Play" Value="播放" ValueEn="Play" />
+```
+
+### 常见错误清单
+
+| 错误 | 原因 | 修复 |
+|------|------|------|
+| `file:` URLs are treated as unique security origins | 直接用 file:// 加载 | 改用 virtual host mapping |
+| `Cannot set properties of undefined` | DOM 元素未找到 | 检查元素 ID 和脚本执行顺序 |
+| `incorrect header check` | zlib 解压失败 | 检查文件格式，使用正确的 data URI 前缀 |
+| Canvas 空白 | object-fit 不生效 | 手动计算 style.width/height |
+| 图片不显示 | 1.x/2.x 图片格式不同 | 检查是 string 还是 Uint8Array |
+| WebView2 缩放干扰 | Ctrl+滚轮触发 WebView2 缩放 | 设置 IsZoomControlEnabled = false |
 - ContextObject：https://github.com/QL-Win/QuickLook.Common/blob/master/Plugin/ContextObject.cs
