@@ -89,11 +89,21 @@
             background: var(--control-bg);
             padding: 8px 12px; border-radius: 4px;
             color: var(--fg); font-size: 11px;
-            line-height: 1.8; z-index: 21;
-            display: none; white-space: nowrap;
+            line-height: 1.6; z-index: 21;
+            display: none; max-width: 280px;
+            max-height: 300px; overflow-y: auto;
         }
         #metaPanel.show { display: block; }
         #metaPanel .label { color: var(--fg-alt); }
+        #metaPanel hr { border-color: rgba(255,255,255,0.1); margin: 4px 0; }
+        #metaPanel .meta-row { display: flex; justify-content: space-between; }
+        #metaPanel .meta-row .label { flex: 0 0 auto; }
+        #metaPanel .meta-row .value { text-align: right; }
+        /* Custom scrollbar */
+        #metaPanel::-webkit-scrollbar { width: 4px; }
+        #metaPanel::-webkit-scrollbar-track { background: transparent; }
+        #metaPanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        #metaPanel::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
 
         /* Color picker popup */
         #colorPicker {
@@ -419,21 +429,37 @@
             var fps = pagMeta.fps || 30;
             var dur = (duration / 1000000).toFixed(2);
             metaPanel.innerHTML =
-                '<span class="label">' + T('META_Width') + ': </span>' + pagWidth + 'px<br>' +
-                '<span class="label">' + T('META_Height') + ': </span>' + pagHeight + 'px<br>' +
-                '<span class="label">' + T('META_Duration') + ': </span>' + dur + 's<br>' +
-                '<span class="label">' + T('META_FPS') + ': </span>' + fps + '<br>' +
-                '<span class="label">' + T('META_Layers') + ': </span>' + (pagMeta.numLayers || '-') + '<br>' +
-                '<span class="label">' + T('META_Images') + ': </span>' + (pagMeta.numImages || '-') + '<br>' +
-                '<span class="label">' + T('META_Texts') + ': </span>' + (pagMeta.numTexts || '-');
+                '<div class="meta-row"><span class="label">' + T('META_Width') + '</span><span class="value">' + pagWidth + 'px</span></div>' +
+                '<div class="meta-row"><span class="label">' + T('META_Height') + '</span><span class="value">' + pagHeight + 'px</span></div>' +
+                '<div class="meta-row"><span class="label">' + T('META_Duration') + '</span><span class="value">' + dur + 's</span></div>' +
+                '<div class="meta-row"><span class="label">' + T('META_FPS') + '</span><span class="value">' + fps + '</span></div>' +
+                '<div class="meta-row"><span class="label">' + T('META_Layers') + '</span><span class="value">' + (pagMeta.numLayers || '-') + '</span></div>' +
+                '<div class="meta-row"><span class="label">' + T('META_Images') + '</span><span class="value">' + (pagMeta.numImages || '-') + '</span></div>' +
+                '<div class="meta-row"><span class="label">' + T('META_Texts') + '</span><span class="value">' + (pagMeta.numTexts || '-') + '</span></div>';
         }
 
+        var metaPinned = false;
+        btnMeta.addEventListener('click', function(e) {
+            e.stopPropagation();
+            metaPinned = !metaPinned;
+            btnMeta.classList.toggle('active', metaPinned);
+            if (metaPinned) {
+                updateMetaPanel();
+                metaPanel.classList.add('show');
+            } else {
+                metaPanel.classList.remove('show');
+            }
+        });
         btnMeta.addEventListener('mouseenter', function() {
-            updateMetaPanel();
-            metaPanel.classList.add('show');
+            if (!metaPinned) {
+                updateMetaPanel();
+                metaPanel.classList.add('show');
+            }
         });
         btnMeta.addEventListener('mouseleave', function() {
-            metaPanel.classList.remove('show');
+            if (!metaPinned) {
+                metaPanel.classList.remove('show');
+            }
         });
 
         // --- Capture current frame with transparent background ---
@@ -529,7 +555,7 @@
         document.addEventListener('click', function(e) {
             if (!colorPicker.contains(e.target) && e.target !== btnBg && !btnBg.contains(e.target))
                 colorPicker.classList.remove('show');
-            if (!metaPanel.contains(e.target) && e.target !== btnMeta && !btnMeta.contains(e.target))
+            if (!metaPinned && !metaPanel.contains(e.target) && e.target !== btnMeta && !btnMeta.contains(e.target))
                 metaPanel.classList.remove('show');
         });
 
