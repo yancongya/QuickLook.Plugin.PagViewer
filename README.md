@@ -12,6 +12,8 @@
 
 PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频、直播等场景。本插件使用 [libpag](https://github.com/Tencent/libpag) WebAssembly 引擎进行实时渲染。
 
+🌐 在线预览（GitHub Pages）：https://yancongya.github.io/QuickLook.Plugin.PagViewer/
+
 ### 功能特性
 
 - 实时 PAG 动画播放（自动循环）
@@ -100,6 +102,8 @@ powershell -ExecutionPolicy Bypass -File Scripts/build.ps1
 A [QuickLook](https://github.com/QL-Win/QuickLook) plugin for previewing PAG (Portable Animated Graphics) animation files.
 
 PAG is an open-source cross-platform animation format by Tencent, widely used in games, short videos, and live streaming. This plugin uses the [libpag](https://github.com/Tencent/libpag) WebAssembly engine for real-time rendering.
+
+🌐 Online preview (GitHub Pages): https://yancongya.github.io/QuickLook.Plugin.PagViewer/
 
 ### Features
 
