@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="PagViewer 是 QuickLook 的 PAG 文件预览插件。在 Windows 资源管理器中选中文件后按空格，即可播放、检查和导出 PAG 动画。">
+<title>PagViewer - 在资源管理器中预览 PAG 动画</title>
+<style>
+:root{--blue:#1985ef;--deep:#126dcc;--mint:#33d1ac;--ink:#142033;--muted:#607087;--line:#dbe6f3;--bg:#f4f8ff;--paper:#fff;--night:#10223d;--r:24px;--wrap:1180px;--shadow:0 22px 60px rgb(36 91 148/.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Segoe UI",ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button,a{touch-action:manipulation}:focus-visible{outline:3px solid var(--blue);outline-offset:3px}.wrap{width:min(var(--wrap),calc(100% - 40px));margin:auto}.skip{position:absolute;left:-999px;top:0;background:var(--blue);color:#fff;padding:10px 16px;z-index:9}.skip:focus{left:0}
+.nav{height:76px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:-.03em;font-size:19px}.brand img{width:35px;height:35px;border-radius:10px}.brand small{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;border-left:1px solid var(--line);padding-left:11px}.links{display:flex;align-items:center;gap:26px;color:var(--muted);font-size:14px}.links a:hover{color:var(--blue)}.nav-github{border:1px solid var(--line);border-radius:999px;padding:8px 15px;color:var(--ink);font-weight:650}.lang-switch{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease}.lang-switch:hover{border-color:var(--blue);color:var(--blue)}
+.hero-shell{overflow:hidden;background:linear-gradient(124deg,#e8f6ff 0%,#f7fbff 52%,#e7f1ff 100%);border-top:1px solid #e2edf9;border-bottom:1px solid #dbe8f7}.hero{min-height:580px;display:grid;grid-template-columns:.9fr 1.1fr;align-items:center;gap:48px;padding:70px 0}.kicker{display:inline-flex;align-items:center;gap:8px;color:var(--deep);font-size:14px;font-weight:700}.kicker i{width:9px;height:9px;border-radius:999px;background:var(--mint);box-shadow:0 0 0 5px rgb(51 209 172/.15)}h1{font-size:clamp(42px,5.4vw,72px);line-height:1.06;letter-spacing:-.065em;margin:18px 0 22px;max-width:16ch}h1 strong{font-weight:800;color:var(--blue)}.hero p{max-width:47ch;margin:0;color:var(--muted);font-size:17px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:31px}.button{min-height:46px;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;border:1px solid var(--line);font-weight:700;transition:transform .18s ease,box-shadow .18s ease}.button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgb(25 133 239/.18)}.primary{background:var(--blue);border-color:var(--blue);color:#fff}.ghost{background:rgb(255 255 255/.7)}.fine{font-size:13px;color:var(--muted);margin-top:16px}
+.stage{position:relative;min-height:400px;isolation:isolate}.orbit{position:absolute;width:500px;height:500px;border-radius:50%;left:50%;top:50%;transform:translate(-48%,-50%);background:radial-gradient(circle at 35% 25%,#fff 0 3%,transparent 3.5%),radial-gradient(circle at 75% 67%,rgb(51 209 172/.22) 0 5%,transparent 5.5%),linear-gradient(135deg,rgb(25 133 239/.13),rgb(51 209 172/.18))}.halo{position:absolute;inset:38px;border:1px solid rgb(25 133 239/.2);border-radius:42% 58% 49% 51%/48% 42% 58% 52%;animation:float 8s ease-in-out infinite}.halo.two{inset:76px;border-color:rgb(51 209 172/.38);animation-delay:-3s}.viewer{position:absolute;left:8%;right:8%;top:50%;aspect-ratio:4/3;border-radius:18px;background:#132740;box-shadow:var(--shadow);overflow:hidden;transform:translateY(-50%) rotate(-3deg);border:7px solid #fff}.viewer-top{height:35px;background:#eaf2fb;display:flex;align-items:center;gap:5px;padding:0 13px}.viewer-top b{height:8px;width:8px;border-radius:50%;background:#fc756f}.viewer-top b:nth-child(2){background:#f7bd53}.viewer-top b:nth-child(3){background:#39c58b}.viewer-top span{margin-left:auto;color:#61748c;font-size:11px}.viewer-canvas{height:calc(100% - 35px);display:grid;place-items:center;position:relative;background-color:#1b3859;background-image:linear-gradient(45deg,rgb(255 255 255/.055) 25%,transparent 25%),linear-gradient(-45deg,rgb(255 255 255/.055) 25%,transparent 25%);background-size:24px 24px}.blob{width:166px;height:166px;position:absolute;inset:0;margin:auto;border-radius:45% 55% 57% 43%/40% 49% 51% 60%;background:linear-gradient(135deg,#46d8e7,#2380f6 58%,#7469ee);box-shadow:inset 18px 14px 22px rgb(255 255 255/.25),0 18px 46px rgb(12 116 236/.45);animation:morph 6s ease-in-out infinite}.ring{position:absolute;inset:0;margin:auto;width:235px;height:235px;border:2px solid rgb(255 255 255/.54);border-radius:50%;transform:rotate(25deg) scaleY(.46);animation:spin 8s linear infinite}.spark{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;animation:bob 3s ease-in-out infinite}.tag{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap}.tag.bottom{bottom:60px}
+.intro{padding:38px 0;background:var(--paper)}.intro-grid{display:grid;grid-template-columns:repeat(3,1fr)}.intro-item{padding:8px 32px;border-right:1px solid var(--line)}.intro-item:first-child{padding-left:0}.intro-item:last-child{border:0}.intro-item b{display:block;font-size:19px;letter-spacing:-.03em}.intro-item span{display:block;margin-top:4px;color:var(--muted);font-size:14px}section.block{padding:110px 0}.eyeline{display:inline-block;color:var(--deep);font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.heading{max-width:620px;margin:12px 0 0;font-size:clamp(31px,4vw,48px);line-height:1.17;letter-spacing:-.055em}.bodycopy{max-width:560px;color:var(--muted);font-size:17px}.split{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:80px}.plate{min-height:370px;border-radius:var(--r);position:relative;overflow:hidden;background:linear-gradient(140deg,#e4f6ff,#d9e9ff);border:1px solid #cbe1f7}.plate.dark{background:linear-gradient(140deg,#143457,#11213d)}.plate-grid{position:absolute;inset:0;background:linear-gradient(rgb(255 255 255/.45) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255/.45) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent)}.frame{position:absolute;background:#fff;border-radius:15px;box-shadow:0 18px 40px rgb(17 89 159/.17)}.frame.main{inset:55px 54px 45px}.frame.main:before{content:"";display:block;height:28px;border-bottom:1px solid #e4edf7;background:#f5f9fd;border-radius:15px 15px 0 0}.mini-play{position:absolute;left:50%;top:53%;width:76px;height:76px;border-radius:50%;transform:translate(-50%,-50%);background:var(--blue);box-shadow:0 15px 28px rgb(25 133 239/.28)}.mini-play:after{content:"";position:absolute;left:30px;top:22px;border-left:27px solid #fff;border-top:16px solid transparent;border-bottom:16px solid transparent}.bar{height:5px;position:absolute;left:25px;right:25px;bottom:23px;border-radius:5px;background:#d9e9f7}.bar:before{content:"";position:absolute;left:0;top:0;height:100%;width:65%;background:var(--blue);border-radius:5px}.float-card{position:absolute;bottom:60px;right:30px;background:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,.12);font-size:13px;line-height:1.5;color:var(--ink);font-weight:600}
+.feature-zone{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}section.block.feature-zone{padding-bottom:230px}.feature-head{display:flex;justify-content:space-between;align-items:end;gap:28px}.feature-head .bodycopy{margin:0}.feature-grid{display:grid;grid-template-columns:1.1fr .9fr .9fr;gap:18px;margin-top:45px}.feature{min-height:250px;padding:28px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);display:flex;flex-direction:column;justify-content:space-between}.feature.large{background:linear-gradient(145deg,#1c8cf3,#216bdd);border:0;color:#fff}.feature h3{font-size:22px;line-height:1.22;letter-spacing:-.04em;margin:0}.feature p{margin:10px 0 0;color:var(--muted);font-size:14px}.feature.large p{color:rgb(255 255 255/.78)}.visual{position:relative;margin-top:20px}.checker:after{content:"";position:absolute;width:55px;height:55px;border-radius:18px 30px 22px 35px;background:linear-gradient(135deg,#5adfca,#498bea);left:calc(50% - 27px);top:15px}.export{height:88px;border-radius:14px;background:rgb(255 255 255/.13);border:1px solid rgb(255 255 255/.2);padding:13px;display:flex;align-items:center;gap:11px}.file-mark{width:36px;height:44px;border-radius:8px;background:#fff;color:#237add;display:grid;place-items:center;font-weight:900;font-size:11px}.export small{color:rgb(255 255 255/.74);display:block}.export b{font-size:14px}
+.download-stage{position:relative;z-index:1;background:#172231;color:#fff;padding:0 0 82px}.download-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 14%,rgb(36 125 232/.38),transparent 23%),linear-gradient(90deg,rgb(255 255 255/.035) 1px,transparent 1px),linear-gradient(rgb(255 255 255/.025) 1px,transparent 1px);background-size:auto,44px 44px,44px 44px;mask-image:linear-gradient(to bottom,#000,transparent)}.download-wrap{position:relative;width:min(980px,calc(100% - 40px));margin:auto;text-align:center;border-bottom:1px solid rgb(255 255 255/.16);padding:1px 0 70px}.package-crop{width:min(420px,73vw);overflow:visible;margin:-190px auto -12px}.package{display:block;width:100%;height:auto;margin:0;filter:drop-shadow(0 20px 18px rgb(0 0 0/.38)) drop-shadow(0 0 1.2px rgb(173 216 255/.55));transform-origin:center;transition:transform .5s cubic-bezier(.16,1,.3,1),filter .5s ease}.download-stage:hover .package{transform:translateY(-12px) rotate(-1deg);filter:drop-shadow(0 34px 26px rgb(0 0 0/.45)) drop-shadow(0 0 1.2px rgb(200 230 255/.7))}.download-stage h2{font-size:clamp(34px,4vw,48px);letter-spacing:-.05em;margin:0 0 12px}.download-stage p{margin:0 auto 28px;max-width:47ch;color:rgb(255 255 255/.68)}.download-buttons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.download-button{min-width:228px;min-height:62px;border-radius:11px;background:#fff;color:#1e2b3a;display:inline-flex;align-items:center;justify-content:center;gap:11px;font-weight:750;box-shadow:0 12px 22px rgb(0 0 0/.15);transition:transform .22s ease,box-shadow .22s ease}.download-button:hover{transform:translateY(-5px);box-shadow:0 20px 32px rgb(0 0 0/.3)}.download-button img{width:27px;height:27px;border-radius:7px}.download-button .win{font-size:25px;line-height:1;color:#2181e9}.download-note{margin-top:24px!important;font-size:13px}.install{display:none}body{color-scheme:light}
+.pain{padding:88px 0;background:var(--paper);border-bottom:1px solid var(--line)}.pain .kicker{margin-bottom:8px}.pain h2{font-size:clamp(26px,3.2vw,38px);line-height:1.18;letter-spacing:-.045em;margin:0 0 12px}.pain .lead{max-width:600px;color:var(--muted);font-size:16px;margin:0 0 36px}.pain .lead code{background:rgba(25,133,239,.1);color:var(--deep);padding:1px 7px;border-radius:6px;font-size:14px}.pain-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}.pain-row{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;background:var(--bg);border-bottom:1px solid var(--line);transition:transform .25s ease,background .25s ease}.pain-row:last-child{border-bottom:0}.pain-row:hover{transform:translateX(6px);background:#eef4fb}.pain-left{display:flex;flex-direction:column;gap:4px}.pain-left b{font-size:15px;letter-spacing:-.02em}.pain-left span{font-size:13.5px;color:var(--muted)}.pain-row>a{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--deep);white-space:nowrap}.pain-turn{margin-top:36px;padding:24px 28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#216bdd);color:#fff;display:flex;align-items:center;gap:20px;transition:transform .25s ease,box-shadow .25s ease}.pain-turn:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgb(25 85 145/.22)}.pain-turn-icon{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:22px}.pain-turn-text{display:flex;flex-direction:column;gap:2px}.pain-turn-text b{font-size:15px}.pain-turn-text span{font-size:13.5px;opacity:.82}
+.dev{padding:88px 0;background:var(--paper);border-bottom:1px solid var(--line)}.dev h2{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.045em;margin:0 0 12px}.dev .bodycopy{margin:0 0 36px}.dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.dev-card{padding:24px;border-radius:8px;background:var(--bg);border:1px solid var(--line);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}.dev-card:hover{transform:translateY(-3px);border-color:rgb(25 133 239/.45)}.dev-card h3{margin:0 0 12px;font-size:16px;letter-spacing:-.02em}.dev-card ul{margin:0;padding:0 0 0 18px;color:var(--muted);font-size:14px}.dev-card ul li{margin-bottom:4px}.dev-card pre{margin:12px 0 0;padding:14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);overflow-x:auto;white-space:pre-wrap;word-break:break-all;font-size:13px;line-height:1.5}.dev-card code{font-family:ui-monospace,"Cascadia Code","Segoe UI Mono",Consolas,monospace}.dev-card .hint{margin:10px 0 0;font-size:13px;color:var(--muted)}.dev-tree{margin-top:28px;padding:24px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}.dev-tree h3{margin:0 0 14px;font-size:16px;letter-spacing:-.02em}.dev-tree pre{margin:0;padding:14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);overflow-x:auto;white-space:pre-wrap;word-break:break-all;font-size:13px;line-height:1.5}.dev-link{margin-top:28px;text-align:center}.dev-link a{font-weight:700;color:var(--deep)}@media(max-width:850px){.dev-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.dev-grid{grid-template-columns:1fr}}
+footer{padding:40px 0 48px;background:var(--paper);border-top:1px solid var(--line)}.foot{display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap;justify-content:space-between;color:var(--muted);font-size:13px}.foot a{color:var(--deep);font-weight:700}
+@keyframes float{50%{transform:translate(-48%,-50%) rotate(12deg) scale(1.04)}}@keyframes morph{50%{border-radius:59% 41% 39% 61%/54% 38% 62% 46%;transform:scale(1.08) rotate(14deg)}}@keyframes spin{to{transform:rotate(385deg) scaleY(.46)}}@keyframes bob{50%{transform:translateY(-10px)}}@media(max-width:850px){.links a:not(.nav-github){display:none}.hero{grid-template-columns:1fr;padding:55px 0 42px}.stage{min-height:330px;max-width:570px;width:100%;margin:auto}.split{grid-template-columns:1fr;gap:38px}.split.reverse .plate{order:2}.feature-grid{grid-template-columns:1fr 1fr}.feature.large{grid-column:span 2}.intro-item{padding:8px 18px}.intro-item:first-child{padding-left:0}}@media(max-width:560px){.wrap{width:min(100% - 32px,var(--wrap))}.nav{height:67px}.brand small{display:none}.nav-github{padding:7px 12px}.hero{min-height:0}.hero p{font-size:16px}.stage{min-height:230px}.orbit{width:280px;height:280px}.halo{inset:22px}.viewer{left:26%;right:26%;top:50%;aspect-ratio:4/3;transform:translateY(-50%) rotate(-3deg);border-width:5px}.ring{width:150px;height:150px}.blob{width:104px;height:104px}.spark{width:13px;height:13px}.tag{display:none}.intro-grid,.feature-grid{grid-template-columns:1fr}.intro-item{padding:0;border:0}.feature-head{display:block}.feature.large{grid-column:auto}.requirements,.foot{align-items:flex-start;flex-direction:column}.plate{min-height:310px}section.block{padding:76px 0}section.block.feature-zone{padding-bottom:150px}}@media(max-width:400px){.stage{min-height:190px}.orbit{width:230px;height:230px}.halo{inset:14px}.viewer{left:28%;right:28%;border-width:4px;border-radius:12px}.ring{width:108px;height:108px}.blob{width:74px;height:74px}.spark{width:11px;height:11px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+/* PagViewer brand palette */
+:root{--blue:#00b4d8;--deep:#0096c7;--mint:#48cae4;--night:#023e8a;--bg:#f0f9ff;--line:#bae6fd;--shadow:0 22px 60px rgb(0 150 199/.14)}
+.hero-shell{background:linear-gradient(124deg,#e0f7ff,#f0f9ff 52%,#e0f7ff);border-color:#bae6fd}.primary{background:#00b4d8;border-color:#00b4d8}.kicker i{background:#48cae4;box-shadow:0 0 0 5px rgb(72 202 228/.15)}.plate{background:linear-gradient(140deg,#e0f7ff,#d0efff);border-color:#a6dcef}.feature.large{background:linear-gradient(145deg,#00b4d8,#0096c7)}.download-stage{background:#023e8a}.download-stage:before{background:radial-gradient(circle at 50% 14%,rgb(0 180 216/.35),transparent 25%),linear-gradient(90deg,rgb(255 255 255/.035) 1px,transparent 1px),linear-gradient(rgb(255 255 255/.025) 1px,transparent 1px)}.pain-turn{background:linear-gradient(135deg,#00b4d8,#0096c7)}.quicklook-link:hover{border-color:#48cae4;color:#0096c7}
+.download-button .win{color:#00b4d8}.download-stage .package{filter:drop-shadow(0 20px 18px rgb(0 30 70/.42)) drop-shadow(0 0 1.2px rgb(150 220 255/.58))}
+</style>
+</head>
+<body>
+<a class="skip" href="#main" data-zh="跳到主要内容" data-en="Skip to main content">跳到主要内容</a>
+<header class="wrap nav">
+  <a class="brand" href="#top"><span>PagViewer</span><small>FOR QUICKLOOK</small></a>
+  <nav class="links" aria-label="Navigation">
+    <a href="#features" data-zh="功能" data-en="Features">功能</a>
+    <a href="#install" data-zh="安装" data-en="Install">安装</a>
+    <a href="#dev" data-zh="开发" data-en="Dev">开发</a>
+    <a class="nav-github" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer">GitHub ↗</a>
+    <button class="lang-switch" onclick="toggleLang()" aria-label="Switch language"><span class="lang-zh">中</span>/<span class="lang-en">EN</span></button>
+  </nav>
+</header>
+
+<main id="main">
+<div class="hero-shell" id="top">
+  <div class="wrap hero">
+    <div>
+      <span class="kicker"><i aria-hidden="true"></i><span data-zh="QuickLook 的 PAG 预览器" data-en="PAG Previewer for QuickLook">QuickLook 的 PAG 预览器</span></span>
+      <h1 data-zh="选中动画，<strong>按下空格。</strong>" data-en="Select animation, <strong>press Space.</strong>">选中动画，<strong>按下空格。</strong></h1>
+      <p data-zh="PagViewer 将 PAG 文件带进 Windows 资源管理器的 QuickLook 预览窗口。实时播放、检查动画信息、切换背景并导出 PNG，不必先打开编辑软件。" data-en="PagViewer brings PAG files into QuickLook's preview window in Windows Explorer. Play, inspect, switch backgrounds, and export PNG without opening editing software.">PagViewer 将 PAG 文件带进 Windows 资源管理器的 QuickLook 预览窗口。实时播放、检查动画信息、切换背景并导出 PNG，不必先打开编辑软件。</p>
+      <div class="actions">
+        <a class="button primary" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases" data-zh="下载 .qlplugin" data-en="Download .qlplugin">下载 .qlplugin</a>
+        <a class="button ghost" href="#install" data-zh="查看安装方式" data-en="View Installation">查看安装方式</a>
+      </div>
+      <p class="fine" data-zh="适用于 Windows 10/11、QuickLook 4.x 与 WebView2 Runtime" data-en="For Windows 10/11, QuickLook 4.x and WebView2 Runtime">适用于 Windows 10/11、QuickLook 4.x 与 WebView2 Runtime</p>
+    </div>
+    <div class="stage" role="img" aria-label="PagViewer preview">
+      <div class="orbit"></div>
+      <div class="halo"></div>
+      <div class="halo two"></div>
+      <div class="viewer">
+        <div class="viewer-top"><b></b><b></b><b></b><span>animation.pag</span></div>
+        <div class="viewer-canvas">
+          <div class="ring"></div>
+          <div class="blob"></div>
+          <div class="spark"></div>
+        </div>
+      </div>
+      <span class="tag"><b>Space</b> <span data-zh="打开预览" data-en="Open Preview">打开预览</span></span>
+      <span class="tag bottom" data-zh="libpag WebAssembly 实时渲染" data-en="libpag WebAssembly Real-time Rendering">libpag WebAssembly 实时渲染</span>
+    </div>
+  </div>
+</div>
+
+<section class="pain" id="why">
+  <div class="wrap">
+    <span class="kicker"><i aria-hidden="true"></i><span data-zh="为什么做 PagViewer" data-en="Why PagViewer">为什么做 PagViewer</span></span>
+    <h2 data-zh="预览 PAG 动画，原本没那么方便" data-en="Previewing PAG wasn't that convenient">预览 PAG 动画，原本没那么方便</h2>
+    <p class="lead" data-zh="PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频、直播等场景。但预览 PAG 文件需要专门的播放器，无法在资源管理器中快速确认。" data-en="PAG is Tencent's open-source cross-platform animation format, widely used in games, short videos, and live streaming. But previewing PAG files requires a dedicated player, making quick verification in Explorer impossible.">PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频、直播等场景。但预览 PAG 文件需要专门的播放器，无法在资源管理器中快速确认。</p>
+    <div class="pain-list">
+      <div class="pain-row">
+        <div class="pain-left">
+          <b data-zh="缺少便捷预览工具" data-en="Lack of convenient preview tools">缺少便捷预览工具</b>
+          <span data-zh="预览 PAG 动画需要打开专门的播放器，无法在资源管理器中快速确认" data-en="Previewing PAG requires opening a dedicated player, can't quickly verify in Explorer">预览 PAG 动画需要打开专门的播放器，无法在资源管理器中快速确认</span>
+        </div>
+      </div>
+      <div class="pain-row">
+        <div class="pain-left">
+          <b data-zh="开发调试不便" data-en="Inconvenient development">开发调试不便</b>
+          <span data-zh="设计师和开发者需要频繁确认导出的 PAG 动画是否正确，但缺少便捷的本地预览工具" data-en="Designers and developers need to frequently verify exported PAG animations, but lack convenient local preview tools">设计师和开发者需要频繁确认导出的 PAG 动画是否正确，但缺少便捷的本地预览工具</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="intro">
+  <div class="wrap intro-grid">
+    <div class="intro-item">
+      <b data-zh="实时渲染" data-en="Real-time Rendering">实时渲染</b>
+      <span data-zh="使用 libpag WebAssembly 引擎进行实时渲染。" data-en="Uses libpag WebAssembly engine for real-time rendering.">使用 libpag WebAssembly 引擎进行实时渲染。</span>
+    </div>
+    <div class="intro-item">
+      <b data-zh="为检查而生" data-en="Built for Inspection">为检查而生</b>
+      <span data-zh="播放、暂停、进度条、音量控制和背景检查集中在一处。" data-en="Play, pause, seek, volume control and background inspection in one place.">播放、暂停、进度条、音量控制和背景检查集中在一处。</span>
+    </div>
+    <div class="intro-item">
+      <b data-zh="需要时导出" data-en="Export When Needed">需要时导出</b>
+      <span data-zh="将当前画面保存为 PNG，文件仍留在原目录。" data-en="Save current frame as PNG, file stays in original directory.">将当前画面保存为 PNG，文件仍留在原目录。</span>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features">
+  <div class="wrap split">
+    <div>
+      <span class="eyeline">Preview in context</span>
+      <h2 class="heading" data-zh="把预览留在你整理素材的地方。" data-en="Keep preview where you organize assets.">把预览留在你整理素材的地方。</h2>
+      <p class="bodycopy" data-zh="PAG 文件不再需要专门打开。PagViewer 接入 QuickLook 的预览流程，在资源管理器中快速确认一个动画是否正确、是否需要继续编辑。" data-en="PAG files no longer need special software. PagViewer integrates with QuickLook to quickly verify animations in Explorer.">PAG 文件不再需要专门打开。PagViewer 接入 QuickLook 的预览流程，在资源管理器中快速确认一个动画是否正确、是否需要继续编辑。</p>
+      <div class="copy-list">
+        <div><i>1</i><p><b data-zh="选中文件" data-en="Select File">选中文件</b><span data-zh="QuickLook 识别 .pag 文件并加载播放器。" data-en="QuickLook recognizes .pag files and loads the player.">QuickLook 识别 .pag 文件并加载播放器。</span></p></div>
+        <div><i>2</i><p><b data-zh="按下空格" data-en="Press Space">按下空格</b><span data-zh="在独立预览窗口中自动循环播放动画。" data-en="Auto-loop animation in an independent preview window.">在独立预览窗口中自动循环播放动画。</span></p></div>
+        <div><i>3</i><p><b data-zh="继续处理素材" data-en="Continue Processing">继续处理素材</b><span data-zh="需要导出时，直接保存当前画面为 PNG。" data-en="Export by saving current frame as PNG directly.">需要导出时，直接保存当前画面为 PNG。</span></p></div>
+      </div>
+    </div>
+    <div class="plate">
+      <div class="plate-grid"></div>
+      <div class="frame main">
+        <div class="mini-play"></div>
+        <div class="bar"></div>
+      </div>
+      <div class="float-card"><b>animation.pag</b>750 × 750<br>24 FPS · 3.2 s</div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap split reverse">
+    <div class="plate dark">
+      <div class="controls-art">
+        <div>
+          <div class="control-row"><span class="control-icon">▶</span><span data-zh="播放进度" data-en="Playback Progress">播放进度</span><span class="slider"></span></div>
+          <div class="control-row"><span class="control-icon">🔊</span><span data-zh="音量控制" data-en="Volume Control">音量控制</span><span data-zh="按钮 / 滑块 / 滚轮" data-en="Button / Slider / Scroll">按钮 / 滑块 / 滚轮</span></div>
+          <div class="control-row"><span class="control-icon">◐</span><span data-zh="背景检查" data-en="Background Check">背景检查</span><span data-zh="透明 / 自定义" data-en="Transparent / Custom">透明 / 自定义</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span class="eyeline">Review every frame</span>
+      <h2 class="heading" data-zh="控制恰好够用，不打断观看。" data-en="Just enough control, without interrupting playback.">控制恰好够用，不打断观看。</h2>
+      <p class="bodycopy" data-zh="拖动进度条定位关键帧，鼠标滚轮调整音量。背景可切换为棋盘格、白色、黑色或自定义颜色，帮助检查透明区域和边缘细节。" data-en="Drag progress bar to keyframes, scroll to adjust volume. Switch backgrounds to inspect transparency and edges.">拖动进度条定位关键帧，鼠标滚轮调整音量。背景可切换为棋盘格、白色、黑色或自定义颜色，帮助检查透明区域和边缘细节。</p>
+      <div class="copy-list">
+        <div><i>+</i><p><b data-zh="文件信息" data-en="File Info">文件信息</b><span data-zh="悬停即可查看尺寸、帧率、图层数和版本信息。" data-en="Hover to view dimensions, FPS, layers and version info.">悬停即可查看尺寸、帧率、图层数和版本信息。</span></p></div>
+        <div><i>+</i><p><b data-zh="音量控制" data-en="Volume Control">音量控制</b><span data-zh="支持按钮、滑块和滚轮调整。" data-en="Supports button, slider and scroll wheel.">支持按钮、滑块和滚轮调整。</span></p></div>
+        <div><i>+</i><p><b data-zh="窗口拖拽" data-en="Window Drag">窗口拖拽</b><span data-zh="点击背景区域可拖动预览窗口位置。" data-en="Click background area to drag preview window.">点击背景区域可拖动预览窗口位置。</span></p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block feature-zone">
+  <div class="wrap">
+    <div class="feature-head">
+      <div>
+        <span class="eyeline">Built for PAG</span>
+        <h2 class="heading" data-zh="从播放到检查，围绕真实预览流程。" data-en="From playback to inspection, real preview workflow.">从播放到检查，围绕真实预览流程。</h2>
+      </div>
+      <p class="bodycopy" data-zh="插件通过 libpag WebAssembly 引擎实时渲染 PAG，并跟随 QuickLook 的明暗主题与系统语言。" data-en="Plugin renders PAG via libpag WebAssembly engine, following QuickLook theme and system language.">插件通过 libpag WebAssembly 引擎实时渲染 PAG，并跟随 QuickLook 的明暗主题与系统语言。</p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature large">
+        <div>
+          <h3 data-zh="用播放器确认动作，而不是凭文件名猜测。" data-en="Confirm actions with player, not by guessing filenames.">用播放器确认动作，而不是凭文件名猜测。</h3>
+          <p data-zh="自动循环、播放/暂停、拖拽跳转和自动隐藏控制栏，让焦点留在动画本身。" data-en="Auto-loop, play/pause, seek and auto-hide control bar keep focus on animation.">自动循环、播放/暂停、拖拽跳转和自动隐藏控制栏，让焦点留在动画本身。</p>
+        </div>
+        <div class="export">
+          <span class="file-mark">PAG</span>
+          <span><small data-zh="预览当前帧" data-en="Preview Current Frame">预览当前帧</small><b data-zh="保存为 PNG" data-en="Save as PNG">保存为 PNG</b></span>
+        </div>
+      </article>
+      <article class="feature">
+        <div>
+          <h3 data-zh="透明背景，一眼可见" data-en="Transparent Background, Visible at a Glance">透明背景，一眼可见</h3>
+          <p data-zh="在默认、棋盘格、白色、黑色与自定义背景之间切换。" data-en="Switch between default, checkerboard, white, black and custom backgrounds.">在默认、棋盘格、白色、黑色与自定义背景之间切换。</p>
+        </div>
+      </article>
+      <article class="feature">
+        <div>
+          <h3 data-zh="画布缩放" data-en="Canvas Zoom">画布缩放</h3>
+          <p data-zh="支持 Ctrl+滚轮 缩放画布（0.1x ~ 5x），左键长按拖拽画布。" data-en="Supports Ctrl+Scroll zoom (0.1x ~ 5x), left-click drag to pan canvas.">支持 Ctrl+滚轮 缩放画布（0.1x ~ 5x），左键长按拖拽画布。</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="download-stage" id="install">
+  <div class="download-wrap">
+    <h2 data-zh="下载 PagViewer" data-en="Download PagViewer">下载 PagViewer</h2>
+    <p data-zh="把 PAG 文件的播放、检查和导出带到 QuickLook。下载插件，按空格安装，然后回到资源管理器开始预览。" data-en="Bring PAG playback, inspection and export to QuickLook. Download plugin, press Space to install, then start previewing.">把 PAG 文件的播放、检查和导出带到 QuickLook。下载插件，按空格安装，然后回到资源管理器开始预览。</p>
+    <div class="download-buttons">
+      <a class="download-button" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases">PagViewer for QuickLook</a>
+      <a class="download-button" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer"><span class="win" aria-hidden="true">⊞</span><span data-zh="从源码构建" data-en="Build from Source">从源码构建</span></a>
+    </div>
+    <p class="download-note">Windows 10/11 · QuickLook 4.x · WebView2 Runtime · GPL-3.0</p>
+    <div class="install-steps">
+      <h3 data-zh="安装只需三步" data-en="Install in Three Steps">安装只需三步</h3>
+      <ol class="steps-3">
+        <li><span class="num">1</span><div><b data-zh="下载插件" data-en="Download Plugin">下载插件</b><p data-zh="从 GitHub Releases 获取 .qlplugin 文件。" data-en="Get .qlplugin file from GitHub Releases.">从 GitHub Releases 获取 .qlplugin 文件。</p></div></li>
+        <li><span class="num">2</span><div><b data-zh="空格安装" data-en="Space to Install">空格安装</b><p data-zh="在资源管理器中选中该文件按空格，在 QuickLook 预览窗里点击「安装」。" data-en="Select the file in Explorer, press Space, click Install in QuickLook preview.">在资源管理器中选中该文件按空格，在 QuickLook 预览窗里点击「安装」。</p></div></li>
+        <li><span class="num">3</span><div><b data-zh="重启即用" data-en="Restart & Use">重启即用</b><p data-zh="重启 QuickLook，回到任意 .pag 文件按空格即可预览动画。" data-en="Restart QuickLook, go to any .pag file, press Space to preview animation.">重启 QuickLook，回到任意 .pag 文件按空格即可预览动画。</p></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="dev" id="dev">
+  <div class="wrap">
+    <h2 data-zh="从源码二次开发" data-en="Build from Source">从源码二次开发</h2>
+    <p class="bodycopy" data-zh="PagViewer 是开源的 .NET 插件，欢迎基于它改播放逻辑、扩展导出格式或移植到其他平台。" data-en="PagViewer is an open-source .NET plugin. Welcome to modify playback logic, extend export formats or port to other platforms.">PagViewer 是开源的 .NET 插件，欢迎基于它改播放逻辑、扩展导出格式或移植到其他平台。</p>
+    <div class="dev-grid">
+      <div class="dev-card">
+        <h3 data-zh="前置要求" data-en="Requirements">前置要求</h3>
+        <ul>
+          <li>Windows 10 / 11</li>
+          <li>QuickLook 4.x</li>
+          <li data-zh="WebView2 Runtime（通常已预装）" data-en="WebView2 Runtime (usually pre-installed)">WebView2 Runtime（通常已预装）</li>
+          <li>.NET SDK</li>
+        </ul>
+      </div>
+      <div class="dev-card">
+        <h3 data-zh="克隆并构建" data-en="Clone & Build">克隆并构建</h3>
+        <pre><code>git clone .../QuickLook.Plugin.PagViewer.git
+cd QuickLook.Plugin.PagViewer
+dotnet build -c Release</code></pre>
+      </div>
+      <div class="dev-card">
+        <h3 data-zh="打包为 .qlplugin" data-en="Package as .qlplugin">打包为 .qlplugin</h3>
+        <pre><code>powershell -ExecutionPolicy Bypass `
+  -File Scripts/build.ps1</code></pre>
+        <p class="hint" data-zh="产物为 .qlplugin，装回 QuickLook 即可验证。" data-en="Output is .qlplugin, install back to QuickLook to verify.">产物为 .qlplugin，装回 QuickLook 即可验证。</p>
+      </div>
+    </div>
+    <div class="dev-tree">
+      <h3 data-zh="项目结构" data-en="Project Structure">项目结构</h3>
+      <pre><code>Plugin.cs                  <span data-zh="# IViewer 入口" data-en="# IViewer Entry"># IViewer 入口</span>
+PagViewerPanel.xaml(.cs)   <span data-zh="# WebView2 播放面板" data-en="# WebView2 Player Panel"># WebView2 播放面板</span>
+Resources/Web/             <span data-zh="# libpag WebAssembly / 播放器 UI" data-en="# libpag WebAssembly / Player UI"># libpag WebAssembly / 播放器 UI</span>
+Samples/                   <span data-zh="# 测试用 PAG 示例文件" data-en="# Sample PAG files for testing"># 测试用 PAG 示例文件</span>
+Scripts/                   <span data-zh="# 打包脚本" data-en="# Build scripts"># 打包脚本</span>
+*.csproj / *.sln</code></pre>
+    </div>
+    <p class="dev-link"><a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer" data-zh="在 GitHub 查看完整源码 ↗" data-en="View full source on GitHub ↗">在 GitHub 查看完整源码 ↗</a></p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span data-zh="PagViewer 是 QuickLook 的 PAG 文件预览插件。" data-en="PagViewer is a QuickLook plugin for previewing PAG files.">PagViewer 是 QuickLook 的 PAG 文件预览插件。</span>
+    <span>
+      <a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer" data-zh="GitHub 项目" data-en="GitHub Project">GitHub 项目</a> ·
+      <a href="https://quicklookapp.vercel.app/" data-zh="QuickLook 官网" data-en="QuickLook Website">QuickLook 官网</a> ·
+      <a href="https://github.com/QL-Win/QuickLook" data-zh="QuickLook 仓库" data-en="QuickLook Repo">QuickLook 仓库</a> ·
+      <a href="https://github.com/QL-Win/QuickLook/wiki/Available-Plugins" data-zh="QuickLook 插件目录" data-en="QuickLook Plugins">QuickLook 插件目录</a> ·
+      <a href="https://pag.io/" data-zh="PAG 官网" data-en="PAG Website">PAG 官网</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+let currentLang = localStorage.getItem('pag-lang') || 'zh';
+
+function toggleLang() {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('pag-lang', currentLang);
+  applyLang();
+}
+
+function applyLang() {
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+  
+  // Update elements with data-zh/data-en attributes
+  document.querySelectorAll('[data-zh][data-en]').forEach(el => {
+    const text = el.getAttribute('data-' + currentLang);
+    if (text) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = text;
+      } else {
+        el.innerHTML = text;
+      }
+    }
+  });
+  
+  // Update lang switch button display
+  document.querySelectorAll('.lang-zh').forEach(el => {
+    el.style.fontWeight = currentLang === 'zh' ? '700' : '400';
+    el.style.color = currentLang === 'zh' ? 'var(--blue)' : 'inherit';
+  });
+  document.querySelectorAll('.lang-en').forEach(el => {
+    el.style.fontWeight = currentLang === 'en' ? '700' : '400';
+    el.style.color = currentLang === 'en' ? 'var(--blue)' : 'inherit';
+  });
+}
+
+// Apply language on load
+applyLang();
+</script>
+</body>
+</html>
