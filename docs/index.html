@@ -1,304 +1,119 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="PagViewer 是 QuickLook 的 PAG 文件预览插件。在 Windows 资源管理器中选中文件后按空格，即可播放、检查和导出 PAG 动画。">
-<title>PagViewer - 在资源管理器中预览 PAG 动画</title>
-<style>
-:root{--blue:#1985ef;--deep:#126dcc;--mint:#33d1ac;--ink:#142033;--muted:#607087;--line:#dbe6f3;--bg:#f4f8ff;--paper:#fff;--night:#10223d;--r:24px;--wrap:1180px;--shadow:0 22px 60px rgb(36 91 148/.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Segoe UI",ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button,a{touch-action:manipulation}:focus-visible{outline:3px solid var(--blue);outline-offset:3px}.wrap{width:min(var(--wrap),calc(100% - 40px));margin:auto}.skip{position:absolute;left:-999px;top:0;background:var(--blue);color:#fff;padding:10px 16px;z-index:9}.skip:focus{left:0}
-.nav{height:76px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:-.03em;font-size:19px}.brand img{width:35px;height:35px;border-radius:10px}.brand small{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;border-left:1px solid var(--line);padding-left:11px}.links{display:flex;align-items:center;gap:26px;color:var(--muted);font-size:14px}.links a:hover{color:var(--blue)}.nav-github{border:1px solid var(--line);border-radius:999px;padding:8px 15px;color:var(--ink);font-weight:650}.lang-switch{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease}.lang-switch:hover{border-color:var(--blue);color:var(--blue)}
-.hero-shell{overflow:hidden;background:linear-gradient(124deg,#e8f6ff 0%,#f7fbff 52%,#e7f1ff 100%);border-top:1px solid #e2edf9;border-bottom:1px solid #dbe8f7}.hero{min-height:580px;display:grid;grid-template-columns:.9fr 1.1fr;align-items:center;gap:48px;padding:70px 0}.kicker{display:inline-flex;align-items:center;gap:8px;color:var(--deep);font-size:14px;font-weight:700}.kicker i{width:9px;height:9px;border-radius:999px;background:var(--mint);box-shadow:0 0 0 5px rgb(51 209 172/.15)}h1{font-size:clamp(42px,5.4vw,72px);line-height:1.06;letter-spacing:-.065em;margin:18px 0 22px;max-width:16ch}h1 strong{font-weight:800;color:var(--blue)}.hero p{max-width:47ch;margin:0;color:var(--muted);font-size:17px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:31px}.button{min-height:46px;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;border:1px solid var(--line);font-weight:700;transition:transform .18s ease,box-shadow .18s ease}.button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgb(25 133 239/.18)}.primary{background:var(--blue);border-color:var(--blue);color:#fff}.ghost{background:rgb(255 255 255/.7)}.fine{font-size:13px;color:var(--muted);margin-top:16px}
-.stage{position:relative;min-height:400px;isolation:isolate}.orbit{position:absolute;width:500px;height:500px;border-radius:50%;left:50%;top:50%;transform:translate(-48%,-50%);background:radial-gradient(circle at 35% 25%,#fff 0 3%,transparent 3.5%),radial-gradient(circle at 75% 67%,rgb(51 209 172/.22) 0 5%,transparent 5.5%),linear-gradient(135deg,rgb(25 133 239/.13),rgb(51 209 172/.18))}.halo{position:absolute;inset:38px;border:1px solid rgb(25 133 239/.2);border-radius:42% 58% 49% 51%/48% 42% 58% 52%;animation:float 8s ease-in-out infinite}.halo.two{inset:76px;border-color:rgb(51 209 172/.38);animation-delay:-3s}.viewer{position:absolute;left:8%;right:8%;top:50%;aspect-ratio:4/3;border-radius:18px;background:#132740;box-shadow:var(--shadow);overflow:hidden;transform:translateY(-50%) rotate(-3deg);border:7px solid #fff}.viewer-top{height:35px;background:#eaf2fb;display:flex;align-items:center;gap:5px;padding:0 13px}.viewer-top b{height:8px;width:8px;border-radius:50%;background:#fc756f}.viewer-top b:nth-child(2){background:#f7bd53}.viewer-top b:nth-child(3){background:#39c58b}.viewer-top span{margin-left:auto;color:#61748c;font-size:11px}.viewer-canvas{height:calc(100% - 35px);display:grid;place-items:center;position:relative;background-color:#1b3859;background-image:linear-gradient(45deg,rgb(255 255 255/.055) 25%,transparent 25%),linear-gradient(-45deg,rgb(255 255 255/.055) 25%,transparent 25%);background-size:24px 24px}.blob{width:166px;height:166px;position:absolute;inset:0;margin:auto;border-radius:45% 55% 57% 43%/40% 49% 51% 60%;background:linear-gradient(135deg,#46d8e7,#2380f6 58%,#7469ee);box-shadow:inset 18px 14px 22px rgb(255 255 255/.25),0 18px 46px rgb(12 116 236/.45);animation:morph 6s ease-in-out infinite}.ring{position:absolute;inset:0;margin:auto;width:235px;height:235px;border:2px solid rgb(255 255 255/.54);border-radius:50%;transform:rotate(25deg) scaleY(.46);animation:spin 8s linear infinite}.spark{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;animation:bob 3s ease-in-out infinite}.tag{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap}.tag.bottom{bottom:60px}
-.intro{padding:38px 0;background:var(--paper)}.intro-grid{display:grid;grid-template-columns:repeat(3,1fr)}.intro-item{padding:8px 32px;border-right:1px solid var(--line)}.intro-item:first-child{padding-left:0}.intro-item:last-child{border:0}.intro-item b{display:block;font-size:19px;letter-spacing:-.03em}.intro-item span{display:block;margin-top:4px;color:var(--muted);font-size:14px}section.block{padding:110px 0}.eyeline{display:inline-block;color:var(--deep);font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.heading{max-width:620px;margin:12px 0 0;font-size:clamp(31px,4vw,48px);line-height:1.17;letter-spacing:-.055em}.bodycopy{max-width:560px;color:var(--muted);font-size:17px}.split{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:80px}.plate{min-height:370px;border-radius:var(--r);position:relative;overflow:hidden;background:linear-gradient(140deg,#e4f6ff,#d9e9ff);border:1px solid #cbe1f7}.plate.dark{background:linear-gradient(140deg,#143457,#11213d)}.plate-grid{position:absolute;inset:0;background:linear-gradient(rgb(255 255 255/.45) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255/.45) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent)}.frame{position:absolute;background:#fff;border-radius:15px;box-shadow:0 18px 40px rgb(17 89 159/.17)}.frame.main{inset:55px 54px 45px}.frame.main:before{content:"";display:block;height:28px;border-bottom:1px solid #e4edf7;background:#f5f9fd;border-radius:15px 15px 0 0}.mini-play{position:absolute;left:50%;top:53%;width:76px;height:76px;border-radius:50%;transform:translate(-50%,-50%);background:var(--blue);box-shadow:0 15px 28px rgb(25 133 239/.28)}.mini-play:after{content:"";position:absolute;left:30px;top:22px;border-left:27px solid #fff;border-top:16px solid transparent;border-bottom:16px solid transparent}.bar{height:5px;position:absolute;left:25px;right:25px;bottom:23px;border-radius:5px;background:#d9e9f7}.bar:before{content:"";position:absolute;left:0;top:0;height:100%;width:65%;background:var(--blue);border-radius:5px}.float-card{position:absolute;bottom:60px;right:30px;background:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,.12);font-size:13px;line-height:1.5;color:var(--ink);font-weight:600}
-.feature-zone{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}section.block.feature-zone{padding-bottom:230px}.feature-head{display:flex;justify-content:space-between;align-items:end;gap:28px}.feature-head .bodycopy{margin:0}.feature-grid{display:grid;grid-template-columns:1.1fr .9fr .9fr;gap:18px;margin-top:45px}.feature{min-height:250px;padding:28px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);display:flex;flex-direction:column;justify-content:space-between}.feature.large{background:linear-gradient(145deg,#1c8cf3,#216bdd);border:0;color:#fff}.feature h3{font-size:22px;line-height:1.22;letter-spacing:-.04em;margin:0}.feature p{margin:10px 0 0;color:var(--muted);font-size:14px}.feature.large p{color:rgb(255 255 255/.78)}.visual{position:relative;margin-top:20px}.checker:after{content:"";position:absolute;width:55px;height:55px;border-radius:18px 30px 22px 35px;background:linear-gradient(135deg,#5adfca,#498bea);left:calc(50% - 27px);top:15px}.export{height:88px;border-radius:14px;background:rgb(255 255 255/.13);border:1px solid rgb(255 255 255/.2);padding:13px;display:flex;align-items:center;gap:11px}.file-mark{width:36px;height:44px;border-radius:8px;background:#fff;color:#237add;display:grid;place-items:center;font-weight:900;font-size:11px}.export small{color:rgb(255 255 255/.74);display:block}.export b{font-size:14px}
-.download-stage{position:relative;z-index:1;background:#172231;color:#fff;padding:0 0 82px}.download-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 14%,rgb(36 125 232/.38),transparent 23%),linear-gradient(90deg,rgb(255 255 255/.035) 1px,transparent 1px),linear-gradient(rgb(255 255 255/.025) 1px,transparent 1px);background-size:auto,44px 44px,44px 44px;mask-image:linear-gradient(to bottom,#000,transparent)}.download-wrap{position:relative;width:min(980px,calc(100% - 40px));margin:auto;text-align:center;border-bottom:1px solid rgb(255 255 255/.16);padding:1px 0 70px}.package-crop{width:min(420px,73vw);overflow:visible;margin:-190px auto -12px}.package{display:block;width:100%;height:auto;margin:0;filter:drop-shadow(0 20px 18px rgb(0 0 0/.38)) drop-shadow(0 0 1.2px rgb(173 216 255/.55));transform-origin:center;transition:transform .5s cubic-bezier(.16,1,.3,1),filter .5s ease}.download-stage:hover .package{transform:translateY(-12px) rotate(-1deg);filter:drop-shadow(0 34px 26px rgb(0 0 0/.45)) drop-shadow(0 0 1.2px rgb(200 230 255/.7))}.download-stage h2{font-size:clamp(34px,4vw,48px);letter-spacing:-.05em;margin:0 0 12px}.download-stage p{margin:0 auto 28px;max-width:47ch;color:rgb(255 255 255/.68)}.download-buttons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.download-button{min-width:228px;min-height:62px;border-radius:11px;background:#fff;color:#1e2b3a;display:inline-flex;align-items:center;justify-content:center;gap:11px;font-weight:750;box-shadow:0 12px 22px rgb(0 0 0/.15);transition:transform .22s ease,box-shadow .22s ease}.download-button:hover{transform:translateY(-5px);box-shadow:0 20px 32px rgb(0 0 0/.3)}.download-button img{width:27px;height:27px;border-radius:7px}.download-button .win{font-size:25px;line-height:1;color:#2181e9}.download-note{margin-top:24px!important;font-size:13px}.install{display:none}body{color-scheme:light}
-.pain{padding:88px 0;background:var(--paper);border-bottom:1px solid var(--line)}.pain .kicker{margin-bottom:8px}.pain h2{font-size:clamp(26px,3.2vw,38px);line-height:1.18;letter-spacing:-.045em;margin:0 0 12px}.pain .lead{max-width:600px;color:var(--muted);font-size:16px;margin:0 0 36px}.pain .lead code{background:rgba(25,133,239,.1);color:var(--deep);padding:1px 7px;border-radius:6px;font-size:14px}.pain-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}.pain-row{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;background:var(--bg);border-bottom:1px solid var(--line);transition:transform .25s ease,background .25s ease}.pain-row:last-child{border-bottom:0}.pain-row:hover{transform:translateX(6px);background:#eef4fb}.pain-left{display:flex;flex-direction:column;gap:4px}.pain-left b{font-size:15px;letter-spacing:-.02em}.pain-left span{font-size:13.5px;color:var(--muted)}.pain-row>a{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--deep);white-space:nowrap}.pain-turn{margin-top:36px;padding:24px 28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#216bdd);color:#fff;display:flex;align-items:center;gap:20px;transition:transform .25s ease,box-shadow .25s ease}.pain-turn:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgb(25 85 145/.22)}.pain-turn-icon{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:22px}.pain-turn-text{display:flex;flex-direction:column;gap:2px}.pain-turn-text b{font-size:15px}.pain-turn-text span{font-size:13.5px;opacity:.82}
-.dev{padding:88px 0;background:var(--paper);border-bottom:1px solid var(--line)}.dev h2{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.045em;margin:0 0 12px}.dev .bodycopy{margin:0 0 36px}.dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.dev-card{padding:24px;border-radius:8px;background:var(--bg);border:1px solid var(--line);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}.dev-card:hover{transform:translateY(-3px);border-color:rgb(25 133 239/.45)}.dev-card h3{margin:0 0 12px;font-size:16px;letter-spacing:-.02em}.dev-card ul{margin:0;padding:0 0 0 18px;color:var(--muted);font-size:14px}.dev-card ul li{margin-bottom:4px}.dev-card pre{margin:12px 0 0;padding:14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);overflow-x:auto;white-space:pre-wrap;word-break:break-all;font-size:13px;line-height:1.5}.dev-card code{font-family:ui-monospace,"Cascadia Code","Segoe UI Mono",Consolas,monospace}.dev-card .hint{margin:10px 0 0;font-size:13px;color:var(--muted)}.dev-tree{margin-top:28px;padding:24px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}.dev-tree h3{margin:0 0 14px;font-size:16px;letter-spacing:-.02em}.dev-tree pre{margin:0;padding:14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);overflow-x:auto;white-space:pre-wrap;word-break:break-all;font-size:13px;line-height:1.5}.dev-link{margin-top:28px;text-align:center}.dev-link a{font-weight:700;color:var(--deep)}@media(max-width:850px){.dev-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.dev-grid{grid-template-columns:1fr}}
-footer{padding:40px 0 48px;background:var(--paper);border-top:1px solid var(--line)}.foot{display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap;justify-content:space-between;color:var(--muted);font-size:13px}.foot a{color:var(--deep);font-weight:700}
-@keyframes float{50%{transform:translate(-48%,-50%) rotate(12deg) scale(1.04)}}@keyframes morph{50%{border-radius:59% 41% 39% 61%/54% 38% 62% 46%;transform:scale(1.08) rotate(14deg)}}@keyframes spin{to{transform:rotate(385deg) scaleY(.46)}}@keyframes bob{50%{transform:translateY(-10px)}}@media(max-width:850px){.links a:not(.nav-github){display:none}.hero{grid-template-columns:1fr;padding:55px 0 42px}.stage{min-height:330px;max-width:570px;width:100%;margin:auto}.split{grid-template-columns:1fr;gap:38px}.split.reverse .plate{order:2}.feature-grid{grid-template-columns:1fr 1fr}.feature.large{grid-column:span 2}.intro-item{padding:8px 18px}.intro-item:first-child{padding-left:0}}@media(max-width:560px){.wrap{width:min(100% - 32px,var(--wrap))}.nav{height:67px}.brand small{display:none}.nav-github{padding:7px 12px}.hero{min-height:0}.hero p{font-size:16px}.stage{min-height:230px}.orbit{width:280px;height:280px}.halo{inset:22px}.viewer{left:26%;right:26%;top:50%;aspect-ratio:4/3;transform:translateY(-50%) rotate(-3deg);border-width:5px}.ring{width:150px;height:150px}.blob{width:104px;height:104px}.spark{width:13px;height:13px}.tag{display:none}.intro-grid,.feature-grid{grid-template-columns:1fr}.intro-item{padding:0;border:0}.feature-head{display:block}.feature.large{grid-column:auto}.requirements,.foot{align-items:flex-start;flex-direction:column}.plate{min-height:310px}section.block{padding:76px 0}section.block.feature-zone{padding-bottom:150px}}@media(max-width:400px){.stage{min-height:190px}.orbit{width:230px;height:230px}.halo{inset:14px}.viewer{left:28%;right:28%;border-width:4px;border-radius:12px}.ring{width:108px;height:108px}.blob{width:74px;height:74px}.spark{width:11px;height:11px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
-/* PagViewer brand palette */
-:root{--blue:#00b4d8;--deep:#0096c7;--mint:#48cae4;--night:#023e8a;--bg:#f0f9ff;--line:#bae6fd;--shadow:0 22px 60px rgb(0 150 199/.14)}
-.hero-shell{background:linear-gradient(124deg,#e0f7ff,#f0f9ff 52%,#e0f7ff);border-color:#bae6fd}.primary{background:#00b4d8;border-color:#00b4d8}.kicker i{background:#48cae4;box-shadow:0 0 0 5px rgb(72 202 228/.15)}.plate{background:linear-gradient(140deg,#e0f7ff,#d0efff);border-color:#a6dcef}.feature.large{background:linear-gradient(145deg,#00b4d8,#0096c7)}.download-stage{background:#023e8a}.download-stage:before{background:radial-gradient(circle at 50% 14%,rgb(0 180 216/.35),transparent 25%),linear-gradient(90deg,rgb(255 255 255/.035) 1px,transparent 1px),linear-gradient(rgb(255 255 255/.025) 1px,transparent 1px)}.pain-turn{background:linear-gradient(135deg,#00b4d8,#0096c7)}.quicklook-link:hover{border-color:#48cae4;color:#0096c7}
-.download-button .win{color:#00b4d8}.download-stage .package{filter:drop-shadow(0 20px 18px rgb(0 30 70/.42)) drop-shadow(0 0 1.2px rgb(150 220 255/.58))}
-</style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="PagViewer 为 Windows QuickLook 增加 PAG 动画预览。选中文件按空格，播放、检查透明背景、查看信息并导出 PNG。">
+<title>PagViewer · 在 QuickLook 中预览 PAG 动画</title>
+<link rel="stylesheet" href="./assets/reference/pag.io/css/main.css">
+<link rel="stylesheet" href="./assets/reference/pag.io/css/pc.css">
+<link rel="stylesheet" href="./page.css">
 </head>
 <body>
-<a class="skip" href="#main" data-zh="跳到主要内容" data-en="Skip to main content">跳到主要内容</a>
-<header class="wrap nav">
-  <a class="brand" href="#top"><span>PagViewer</span><small>FOR QUICKLOOK</small></a>
-  <nav class="links" aria-label="Navigation">
-    <a href="#features" data-zh="功能" data-en="Features">功能</a>
-    <a href="#install" data-zh="安装" data-en="Install">安装</a>
-    <a href="#dev" data-zh="开发" data-en="Dev">开发</a>
-    <a class="nav-github" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer">GitHub ↗</a>
-    <button class="lang-switch" onclick="toggleLang()" aria-label="Switch language"><span class="lang-zh">中</span>/<span class="lang-en">EN</span></button>
-  </nav>
-</header>
-
-<main id="main">
-<div class="hero-shell" id="top">
-  <div class="wrap hero">
-    <div>
-      <span class="kicker"><i aria-hidden="true"></i><span data-zh="QuickLook 的 PAG 预览器" data-en="PAG Previewer for QuickLook">QuickLook 的 PAG 预览器</span></span>
-      <h1 data-zh="选中动画，<strong>按下空格。</strong>" data-en="Select animation, <strong>press Space.</strong>">选中动画，<strong>按下空格。</strong></h1>
-      <p data-zh="PagViewer 将 PAG 文件带进 Windows 资源管理器的 QuickLook 预览窗口。实时播放、检查动画信息、切换背景并导出 PNG，不必先打开编辑软件。" data-en="PagViewer brings PAG files into QuickLook's preview window in Windows Explorer. Play, inspect, switch backgrounds, and export PNG without opening editing software.">PagViewer 将 PAG 文件带进 Windows 资源管理器的 QuickLook 预览窗口。实时播放、检查动画信息、切换背景并导出 PNG，不必先打开编辑软件。</p>
-      <div class="actions">
-        <a class="button primary" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases" data-zh="下载 .qlplugin" data-en="Download .qlplugin">下载 .qlplugin</a>
-        <a class="button ghost" href="#install" data-zh="查看安装方式" data-en="View Installation">查看安装方式</a>
-      </div>
-      <p class="fine" data-zh="适用于 Windows 10/11、QuickLook 4.x 与 WebView2 Runtime" data-en="For Windows 10/11, QuickLook 4.x and WebView2 Runtime">适用于 Windows 10/11、QuickLook 4.x 与 WebView2 Runtime</p>
-    </div>
-    <div class="stage" role="img" aria-label="PagViewer preview">
-      <div class="orbit"></div>
-      <div class="halo"></div>
-      <div class="halo two"></div>
-      <div class="viewer">
-        <div class="viewer-top"><b></b><b></b><b></b><span>animation.pag</span></div>
-        <div class="viewer-canvas">
-          <div class="ring"></div>
-          <div class="blob"></div>
-          <div class="spark"></div>
-        </div>
-      </div>
-      <span class="tag"><b>Space</b> <span data-zh="打开预览" data-en="Open Preview">打开预览</span></span>
-      <span class="tag bottom" data-zh="libpag WebAssembly 实时渲染" data-en="libpag WebAssembly Real-time Rendering">libpag WebAssembly 实时渲染</span>
-    </div>
-  </div>
+<a class="skip-link" href="#content">跳到主要内容</a>
+<div class="fixedHeaderContainer">
+  <header class="site-header">
+    <a class="site-brand" href="#top" aria-label="PagViewer 首页"><img src="./assets/reference/pag.io/img/new_official_website/logo.png" width="133" height="48" alt="PAG"><span>Viewer<small>for QuickLook</small></span></a>
+    <nav class="desktop-nav" aria-label="主导航"><a class="active" href="#top" data-en="Home">首页</a><a href="#why" data-en="Why">缘起</a><a href="#features" data-en="Features">功能</a><a href="#docs" data-en="Use">使用</a><a href="#install" data-en="Install">安装</a><a href="./develop.html" data-en="Develop">开发</a></nav>
+    <div class="header-actions"><button id="language" aria-label="Switch to English" type="button">CN</button><button id="motion" aria-pressed="false" type="button" aria-label="暂停页面动效">Ⅱ</button><a class="github-link" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer" target="_blank" rel="noopener">GitHub</a><a class="header-cta" href="#download" data-en="Free download">免费下载</a><button id="menu" aria-label="展开导航" aria-expanded="false" type="button"><span></span><span></span></button></div>
+  </header>
 </div>
+<div class="navPusher" id="content"><main>
+  <section class="intro-box" id="top">
+    <div class="wrap">
+      <div class="main-content">
+        <h1 class="wordmark"><img class="pag" src="./assets/reference/pag.qq.com/img/new_official_website/fill2.png" alt="PAG"><span>Viewer</span></h1>
+        <p class="paragraph nowrapParagraph"><strong>PagViewer</strong><span data-en=" brings PAG animation preview to QuickLook."> 是 QuickLook 的 PAG 动画预览插件。</span></p>
+        <p class="paragraph" data-en="Select a .pag file in File Explorer and press Space. Play the animation, inspect transparency and file details, or save a frame as PNG — right where you organize your assets.">在资源管理器中选中 .pag 文件，按下空格，就能直接播放动画。检查透明背景、查看文件信息，或将当前帧保存为 PNG，把预览留在你整理素材的地方。</p>
+        <div class="btn-bar"><a class="btn blue" href="#download"><img src="./assets/reference/pag.qq.com/img/new_official_website/download.png" width="24" height="24" alt=""><span data-en="Free download">免费下载</span></a><a class="btn" href="#features"><img src="./assets/reference/pag.qq.com/img/new_official_website/browser.png" width="24" height="24" alt=""><span data-en="Explore features">查看功能</span></a></div>
+        <span class="tip">Windows 10 / 11 · QuickLook 4.x · WebView2 Runtime</span>
+        <div class="hero-quicklinks"><a href="https://quicklookapp.vercel.app/" target="_blank" rel="noopener"><img src="./assets/latest/assets/quicklook-icon.png" alt=""><span data-en="QuickLook website ↗">QuickLook 官网 ↗</span></a><a href="https://github.com/QL-Win/QuickLook" target="_blank" rel="noopener" data-en="QuickLook repository ↗">QuickLook 仓库 ↗</a><a href="https://github.com/QL-Win/QuickLook/wiki/Available-Plugins" target="_blank" rel="noopener" data-en="QuickLook plugins ↗">QuickLook 插件目录 ↗</a><a href="https://pag.io/" target="_blank" rel="noopener"><img src="./assets/latest/logo.png" alt=""><span data-en="PAG website ↗">PAG 官网 ↗</span></a></div>
+      </div>
+      <iframe class="original-hero" src="./hero-latest.html" title="线上最新版 PagViewer 交互预览"></iframe>
+    </div>
+  </section>
 
-<section class="pain" id="why">
-  <div class="wrap">
-    <span class="kicker"><i aria-hidden="true"></i><span data-zh="为什么做 PagViewer" data-en="Why PagViewer">为什么做 PagViewer</span></span>
-    <h2 data-zh="预览 PAG 动画，原本没那么方便" data-en="Previewing PAG wasn't that convenient">预览 PAG 动画，原本没那么方便</h2>
-    <p class="lead" data-zh="PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频、直播等场景。但预览 PAG 文件需要专门的播放器，无法在资源管理器中快速确认。" data-en="PAG is Tencent's open-source cross-platform animation format, widely used in games, short videos, and live streaming. But previewing PAG files requires a dedicated player, making quick verification in Explorer impossible.">PAG 是腾讯开源的跨平台动画格式，广泛应用于游戏、短视频、直播等场景。但预览 PAG 文件需要专门的播放器，无法在资源管理器中快速确认。</p>
-    <div class="pain-list">
-      <div class="pain-row">
-        <div class="pain-left">
-          <b data-zh="缺少便捷预览工具" data-en="Lack of convenient preview tools">缺少便捷预览工具</b>
-          <span data-zh="预览 PAG 动画需要打开专门的播放器，无法在资源管理器中快速确认" data-en="Previewing PAG requires opening a dedicated player, can't quickly verify in Explorer">预览 PAG 动画需要打开专门的播放器，无法在资源管理器中快速确认</span>
-        </div>
-      </div>
-      <div class="pain-row">
-        <div class="pain-left">
-          <b data-zh="开发调试不便" data-en="Inconvenient development">开发调试不便</b>
-          <span data-zh="设计师和开发者需要频繁确认导出的 PAG 动画是否正确，但缺少便捷的本地预览工具" data-en="Designers and developers need to frequently verify exported PAG animations, but lack convenient local preview tools">设计师和开发者需要频繁确认导出的 PAG 动画是否正确，但缺少便捷的本地预览工具</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="intro">
-  <div class="wrap intro-grid">
-    <div class="intro-item">
-      <b data-zh="实时渲染" data-en="Real-time Rendering">实时渲染</b>
-      <span data-zh="使用 libpag WebAssembly 引擎进行实时渲染。" data-en="Uses libpag WebAssembly engine for real-time rendering.">使用 libpag WebAssembly 引擎进行实时渲染。</span>
-    </div>
-    <div class="intro-item">
-      <b data-zh="为检查而生" data-en="Built for Inspection">为检查而生</b>
-      <span data-zh="播放、暂停、进度条、音量控制和背景检查集中在一处。" data-en="Play, pause, seek, volume control and background inspection in one place.">播放、暂停、进度条、音量控制和背景检查集中在一处。</span>
-    </div>
-    <div class="intro-item">
-      <b data-zh="需要时导出" data-en="Export When Needed">需要时导出</b>
-      <span data-zh="将当前画面保存为 PNG，文件仍留在原目录。" data-en="Save current frame as PNG, file stays in original directory.">将当前画面保存为 PNG，文件仍留在原目录。</span>
-    </div>
-  </div>
-</section>
+<section class="pain" id="why"><div class="wrap"><div class="why-layout"><div class="why-copy"><span class="kicker"><i aria-hidden="true"></i><span data-zh="为什么做 PagViewer" data-en="Why PagViewer">为什么做 PagViewer</span></span><h2 data-zh="看一眼 PAG，原本没那么顺手" data-en="Previewing PAG wasnt that easy">看一眼 PAG，<br>原本没那么顺手</h2><p class="lead" data-en="PAG is Tencent's open-source animation format, used in WeChat Red Packet, Honor of Kings, and live streaming gifts. But verifying exported <code>.pag</code> files was always cumbersome:">PAG 是腾讯开源的动效格式，微信红包、王者荣耀、直播礼物里都在用。但每次想确认导出的 <code>.pag</code> 是否正常，过去的办法都很折腾：</p></div><div class="pain-list" id="compare"><div class="pain-row"><svg class="method-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="46" height="46" rx="6"/><text x="32" y="39" text-anchor="middle" fill="currentColor" stroke="none" font-size="18" font-family="Arial">Ae</text></svg><div class="pain-left"><b data-zh="装 AE 插件" data-en="Install AE Plugin">装 AE 插件</b><span data-en="Need to open After Effects and install PAGExporter first">得先开 After Effects，装好 PAGExporter 才能导出预览</span></div><a href="https://pag.io/docs/install-PAGExporter.html" target="_blank" rel="noopener" data-zh="安装指南 ↗" data-en="Install Guide ↗">安装指南 ↗</a></div><div class="pain-row"><svg class="method-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 45h44M16 45V26h32v19M32 33V9m-9 9 9-9 9 9"/></svg><div class="pain-left"><b data-zh="上传线上预览" data-en="Upload for Preview">上传线上预览</b><span data-en="Must upload files to web each time, assets leave local, may not even spot issues">每次都要传文件到网页，素材离开本地，还不一定能看出问题</span></div><a href="https://pag.qq.com/player.html" target="_blank" rel="noopener" data-zh="在线预览 ↗" data-en="Online Preview ↗">在线预览 ↗</a></div><div class="pain-row"><svg class="method-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="12" width="50" height="35" rx="5"/><path d="m27 23 13 7-13 7zM22 55h20M32 47v8"/></svg><div class="pain-left"><b data-zh="装本地播放器" data-en="Install Local Player">装本地播放器</b><span data-en="Install PAGViewer desktop, switch windows to find files">安装 PAGViewer 桌面端，来回切窗口找文件</span></div><a href="https://pag.io/docs/zh-CN/install.html" target="_blank" rel="noopener" data-zh="PAGViewer ↗" data-en="PAGViewer ↗">PAGViewer ↗</a></div><div class="pain-row"><svg class="method-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 20 19-9 19 9v26l-19 9-19-9zm0 0 19 9 19-9M32 29v26M23 15l19 10"/></svg><div class="pain-left"><b data-zh="在 Eagle 装插件" data-en="Install Eagle Plugin">在 Eagle 装插件</b><span data-en="Need community extension in asset manager to preview">资产管理器里装社区扩展才能预览</span></div><a href="https://community-en.eagle.cool/plugin/dd3f8cee-6aa6-4cb0-b7e2-291bd824ce08" target="_blank" rel="noopener" data-zh="Eagle 插件 ↗" data-en="Eagle Plugin ↗">Eagle 插件 ↗</a></div></div></div><div class="pain-turn"><div class="why-statement"><span>QuickLook + PagViewer</span>
+<svg class="workflow-graphic" viewBox="0 0 354 152" role="img" aria-labelledby="flow-title" data-paused="true"><title id="flow-title" data-en="Select a PAG file, press Space, and preview the animation">选择 PAG 文件，按空格，预览动画</title>
+<defs><linearGradient id="flow-orb" x2="1" y2="1"><stop stop-color="#cce9ff"/><stop offset=".55" stop-color="#458de9"/><stop offset="1" stop-color="#005ad9"/></linearGradient></defs>
+<g class="flow-file"><rect class="flow-selection" x="9" y="28" width="77" height="89" rx="7" fill="#005ad9" fill-opacity=".06" stroke="#005ad9"/><path d="M31 38h25l15 15v54H25V44q0-6 6-6" fill="white" stroke="#cbd8e8"/><path d="M56 38v15h15" fill="#e4edfa" stroke="#cbd8e8"/><image href="./assets/latest/logo.png" x="35" y="61" width="26" height="26"/><path d="M35 96h26" stroke="#cbd8e8" stroke-width="2"/></g>
+<path d="M99 72h57m-6-5 7 5-7 5" fill="none" stroke="#b1c4df" stroke-width="1.5"/>
+<g class="flow-space"><rect x="99" y="109" width="62" height="26" rx="5" fill="white" stroke="#cbd8e8"/><path d="M106 129h48" stroke="#e1e8f2"/><text x="130" y="126" fill="#005ad9" font-size="11" text-anchor="middle" data-en="Space">空格</text></g>
+<g class="flow-preview"><rect x="178" y="23" width="159" height="101" rx="7" fill="#f8fbff" stroke="#cbd8e8"/><path d="M179 43h157" stroke="#dfe7f1"/><circle cx="190" cy="33" r="2" fill="#005ad9"/><text x="199" y="36" font-size="8" fill="#8b99ab">motion.pag</text><g class="flow-orbit"><ellipse cx="258" cy="80" rx="47" ry="15" fill="none" stroke="#7ba8e7"/><circle cx="258" cy="80" r="24" fill="url(#flow-orb)"/><circle cx="299" cy="72" r="4" fill="#87b8ef"/></g><path d="M192 113h128" stroke="#dce6f3"/><path class="flow-progress" d="M192 113h87" stroke="#005ad9" stroke-width="2"/></g>
+<path class="flow-cursor" d="m51 101 2 22 6-6 6 11 5-3-6-10 8-1z" fill="white" stroke="#005ad9" stroke-width="1.3"/>
+</svg><small data-en="Select a file → Press Space → Preview">选择文件 → 按空格 → 预览动画</small></div><div class="pain-turn-text"><p data-en="QuickLook's &quot;select file, press Space to preview&quot; is an efficiency habit I can't live without. Unfortunately, it never had PAG support.">QuickLook 的「选中文件、按空格即刻预览」是我离不开的效率习惯。可惜它一直没有 PAG 支持。</p><p class="pain-so" data-en="So I made <strong>PagViewer</strong> — bringing &quot;Space to preview&quot; to PAG files, easily check if animations meet standards, no software needed, no uploading.">于是我做了 <strong>PagViewer</strong> —— 把「空格即看」带到 PAG 文件上，随手检阅动画是否达标，不必开软件、不必上传。</p><p class="pain-pre" data-en="Prerequisite: Install QuickLook (Windows QL-Win version), then install this plugin.">前提：装好 QuickLook（Windows 版 QL-Win），再装这个插件。</p></div></div></div></section>
 
-<section class="block" id="features">
-  <div class="wrap split">
-    <div>
-      <span class="eyeline">Preview in context</span>
-      <h2 class="heading" data-zh="把预览留在你整理素材的地方。" data-en="Keep preview where you organize assets.">把预览留在你整理素材的地方。</h2>
-      <p class="bodycopy" data-zh="PAG 文件不再需要专门打开。PagViewer 接入 QuickLook 的预览流程，在资源管理器中快速确认一个动画是否正确、是否需要继续编辑。" data-en="PAG files no longer need special software. PagViewer integrates with QuickLook to quickly verify animations in Explorer.">PAG 文件不再需要专门打开。PagViewer 接入 QuickLook 的预览流程，在资源管理器中快速确认一个动画是否正确、是否需要继续编辑。</p>
-      <div class="copy-list">
-        <div><i>1</i><p><b data-zh="选中文件" data-en="Select File">选中文件</b><span data-zh="QuickLook 识别 .pag 文件并加载播放器。" data-en="QuickLook recognizes .pag files and loads the player.">QuickLook 识别 .pag 文件并加载播放器。</span></p></div>
-        <div><i>2</i><p><b data-zh="按下空格" data-en="Press Space">按下空格</b><span data-zh="在独立预览窗口中自动循环播放动画。" data-en="Auto-loop animation in an independent preview window.">在独立预览窗口中自动循环播放动画。</span></p></div>
-        <div><i>3</i><p><b data-zh="继续处理素材" data-en="Continue Processing">继续处理素材</b><span data-zh="需要导出时，直接保存当前画面为 PNG。" data-en="Export by saving current frame as PNG directly.">需要导出时，直接保存当前画面为 PNG。</span></p></div>
-      </div>
+  <section class="main" id="features" aria-label="功能">
+    <div class="chapter" id="preview">
+      <span class="feature-label" data-en="FEATURE">功能</span>
+      <div class="wrap">
+        <div class="detail"><img class="num" src="./assets/reference/pag.qq.com/img/new_official_website/number_1.png" alt="01"><h2 class="title" data-en="Press Space. Preview instantly.">空格一按，即刻预览</h2><p class="text" data-en="No separate player to launch. Select a PAG file in File Explorer and press Space. PagViewer joins QuickLook's preview flow and plays your animation on a loop.">不用先打开专门的播放器。在资源管理器中选中 PAG 文件，按下空格，PagViewer 就会接入 QuickLook 预览流程，自动循环播放动画。</p><div class="btn-bar"><a class="btn" href="#install"><img src="./assets/reference/pag.qq.com/img/new_official_website/more-b.png" alt=""><span data-en="How to install">了解如何安装</span></a></div></div>
+        <figure class="scene"><object type="image/svg+xml" data="./assets/illustrations/01-space-preview.svg" aria-label="选中文件后按空格，打开动画预览示意">选中文件并在 QuickLook 中打开预览的界面示意。</object><figcaption><span data-en="Feature demonstration · UI illustration">功能演示 · 界面示意</span><span class="scene-actions"><button type="button" data-action="pause" aria-label="暂停空格预览演示">Ⅱ</button><button type="button" data-action="replay" aria-label="重播空格预览演示">↻</button></span></figcaption></figure>
+      </div><img class="arrow" src="./assets/reference/pag.qq.com/img/new_official_website/arrow.png" alt="">
     </div>
-    <div class="plate">
-      <div class="plate-grid"></div>
-      <div class="frame main">
-        <div class="mini-play"></div>
-        <div class="bar"></div>
-      </div>
-      <div class="float-card"><b>animation.pag</b>750 × 750<br>24 FPS · 3.2 s</div>
-    </div>
-  </div>
-</section>
 
-<section class="block">
-  <div class="wrap split reverse">
-    <div class="plate dark">
-      <div class="controls-art">
-        <div>
-          <div class="control-row"><span class="control-icon">▶</span><span data-zh="播放进度" data-en="Playback Progress">播放进度</span><span class="slider"></span></div>
-          <div class="control-row"><span class="control-icon">🔊</span><span data-zh="音量控制" data-en="Volume Control">音量控制</span><span data-zh="按钮 / 滑块 / 滚轮" data-en="Button / Slider / Scroll">按钮 / 滑块 / 滚轮</span></div>
-          <div class="control-row"><span class="control-icon">◐</span><span data-zh="背景检查" data-en="Background Check">背景检查</span><span data-zh="透明 / 自定义" data-en="Transparent / Custom">透明 / 自定义</span></div>
-        </div>
-      </div>
+    <div class="chapter">
+      <div class="wrap reverse">
+        <div class="detail reverse"><img class="num" src="./assets/reference/pag.qq.com/img/new_official_website/number_2.png" alt="02"><h2 class="title" data-en="Playback, at your own pace.">播放细节，随时掌控</h2><p class="text" data-en="Play, pause, or drag the timeline to the moment you want to check. Adjust audio with the volume control, then return to uninterrupted playback as the controls fade away.">播放、暂停，或拖动时间轴定位到想看的瞬间。通过音量按钮、滑块和滚轮调整声音；停止操作后，控制栏会自动隐藏，让画面回到主角。</p><div class="btn-bar reverse"><a class="btn" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer#快捷键" target="_blank" rel="noopener"><img src="./assets/reference/pag.qq.com/img/new_official_website/more-b.png" alt=""><span data-en="View controls">查看操作说明</span></a></div></div>
+        <figure class="scene"><object type="image/svg+xml" data="./assets/illustrations/02-timeline.svg" aria-label="拖动时间轴检查动画画面示意"></object><figcaption><span data-en="Feature demonstration · UI illustration">功能演示 · 界面示意</span><span class="scene-actions"><button type="button" data-action="pause" aria-label="暂停时间轴演示">Ⅱ</button><button type="button" data-action="replay" aria-label="重播时间轴演示">↻</button></span></figcaption></figure>
+      </div><img class="arrow reverse" src="./assets/reference/pag.qq.com/img/new_official_website/arrow.png" alt="">
     </div>
-    <div>
-      <span class="eyeline">Review every frame</span>
-      <h2 class="heading" data-zh="控制恰好够用，不打断观看。" data-en="Just enough control, without interrupting playback.">控制恰好够用，不打断观看。</h2>
-      <p class="bodycopy" data-zh="拖动进度条定位关键帧，鼠标滚轮调整音量。背景可切换为棋盘格、白色、黑色或自定义颜色，帮助检查透明区域和边缘细节。" data-en="Drag progress bar to keyframes, scroll to adjust volume. Switch backgrounds to inspect transparency and edges.">拖动进度条定位关键帧，鼠标滚轮调整音量。背景可切换为棋盘格、白色、黑色或自定义颜色，帮助检查透明区域和边缘细节。</p>
-      <div class="copy-list">
-        <div><i>+</i><p><b data-zh="文件信息" data-en="File Info">文件信息</b><span data-zh="悬停即可查看尺寸、帧率、图层数和版本信息。" data-en="Hover to view dimensions, FPS, layers and version info.">悬停即可查看尺寸、帧率、图层数和版本信息。</span></p></div>
-        <div><i>+</i><p><b data-zh="音量控制" data-en="Volume Control">音量控制</b><span data-zh="支持按钮、滑块和滚轮调整。" data-en="Supports button, slider and scroll wheel.">支持按钮、滑块和滚轮调整。</span></p></div>
-        <div><i>+</i><p><b data-zh="窗口拖拽" data-en="Window Drag">窗口拖拽</b><span data-zh="点击背景区域可拖动预览窗口位置。" data-en="Click background area to drag preview window.">点击背景区域可拖动预览窗口位置。</span></p></div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="block feature-zone">
-  <div class="wrap">
-    <div class="feature-head">
-      <div>
-        <span class="eyeline">Built for PAG</span>
-        <h2 class="heading" data-zh="从播放到检查，围绕真实预览流程。" data-en="From playback to inspection, real preview workflow.">从播放到检查，围绕真实预览流程。</h2>
-      </div>
-      <p class="bodycopy" data-zh="插件通过 libpag WebAssembly 引擎实时渲染 PAG，并跟随 QuickLook 的明暗主题与系统语言。" data-en="Plugin renders PAG via libpag WebAssembly engine, following QuickLook theme and system language.">插件通过 libpag WebAssembly 引擎实时渲染 PAG，并跟随 QuickLook 的明暗主题与系统语言。</p>
+    <div class="chapter">
+      <div class="wrap">
+        <div class="detail"><img class="num" src="./assets/reference/pag.qq.com/img/new_official_website/number_3.png" alt="03"><h2 class="title" data-en="Reveal transparent detail.">透明背景，清晰可见</h2><p class="text" data-en="Switch between checkerboard, light, dark, and custom backgrounds. Zoom with Ctrl + wheel, pan the canvas, and inspect edges and small details in context.">在棋盘格、白色、黑色与自定义背景之间切换，检查透明区域和边缘。按住 Ctrl 滚动缩放，长按拖动画布，让局部细节也能看得清楚。</p><div class="btn-bar"><a class="btn" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer#快捷键" target="_blank" rel="noopener"><img src="./assets/reference/pag.qq.com/img/new_official_website/more-b.png" alt=""><span data-en="View shortcuts">查看快捷操作</span></a></div></div>
+        <figure class="scene"><object type="image/svg+xml" data="./assets/illustrations/03-transparency.svg" aria-label="透明背景切换和缩放示意"></object><figcaption><span data-en="Feature demonstration · UI illustration">功能演示 · 界面示意</span><span class="scene-actions"><button type="button" data-action="pause" aria-label="暂停透明背景演示">Ⅱ</button><button type="button" data-action="replay" aria-label="重播透明背景演示">↻</button></span></figcaption></figure>
+      </div><img class="arrow" src="./assets/reference/pag.qq.com/img/new_official_website/arrow.png" alt="">
     </div>
-    <div class="feature-grid">
-      <article class="feature large">
-        <div>
-          <h3 data-zh="用播放器确认动作，而不是凭文件名猜测。" data-en="Confirm actions with player, not by guessing filenames.">用播放器确认动作，而不是凭文件名猜测。</h3>
-          <p data-zh="自动循环、播放/暂停、拖拽跳转和自动隐藏控制栏，让焦点留在动画本身。" data-en="Auto-loop, play/pause, seek and auto-hide control bar keep focus on animation.">自动循环、播放/暂停、拖拽跳转和自动隐藏控制栏，让焦点留在动画本身。</p>
-        </div>
-        <div class="export">
-          <span class="file-mark">PAG</span>
-          <span><small data-zh="预览当前帧" data-en="Preview Current Frame">预览当前帧</small><b data-zh="保存为 PNG" data-en="Save as PNG">保存为 PNG</b></span>
-        </div>
-      </article>
-      <article class="feature">
-        <div>
-          <h3 data-zh="透明背景，一眼可见" data-en="Transparent Background, Visible at a Glance">透明背景，一眼可见</h3>
-          <p data-zh="在默认、棋盘格、白色、黑色与自定义背景之间切换。" data-en="Switch between default, checkerboard, white, black and custom backgrounds.">在默认、棋盘格、白色、黑色与自定义背景之间切换。</p>
-        </div>
-      </article>
-      <article class="feature">
-        <div>
-          <h3 data-zh="画布缩放" data-en="Canvas Zoom">画布缩放</h3>
-          <p data-zh="支持 Ctrl+滚轮 缩放画布（0.1x ~ 5x），左键长按拖拽画布。" data-en="Supports Ctrl+Scroll zoom (0.1x ~ 5x), left-click drag to pan canvas.">支持 Ctrl+滚轮 缩放画布（0.1x ~ 5x），左键长按拖拽画布。</p>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
 
-<section class="download-stage" id="install">
-  <div class="download-wrap">
-    <h2 data-zh="下载 PagViewer" data-en="Download PagViewer">下载 PagViewer</h2>
-    <p data-zh="把 PAG 文件的播放、检查和导出带到 QuickLook。下载插件，按空格安装，然后回到资源管理器开始预览。" data-en="Bring PAG playback, inspection and export to QuickLook. Download plugin, press Space to install, then start previewing.">把 PAG 文件的播放、检查和导出带到 QuickLook。下载插件，按空格安装，然后回到资源管理器开始预览。</p>
-    <div class="download-buttons">
-      <a class="download-button" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases">PagViewer for QuickLook</a>
-      <a class="download-button" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer"><span class="win" aria-hidden="true">⊞</span><span data-zh="从源码构建" data-en="Build from Source">从源码构建</span></a>
+    <div class="chapter">
+      <div class="wrap reverse">
+        <div class="detail reverse"><img class="num" src="./assets/reference/pag.qq.com/img/new_official_website/number_4.png" alt="04"><h2 class="title" data-en="Read the file at a glance.">文件信息，一眼读懂</h2><p class="text" data-en="Hover over the info button to see dimensions, duration, frame rate, and layers. The FPS display and progress-bar color help you notice rendering pressure while previewing.">悬停信息按钮即可查看尺寸、时长、帧率和图层数等信息。结合 FPS 显示与进度条的性能反馈，在检查动画效果时，也能留意文件的渲染状态。</p><div class="btn-bar reverse"><a class="btn" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer#功能特性" target="_blank" rel="noopener"><img src="./assets/reference/pag.qq.com/img/new_official_website/more-b.png" alt=""><span data-en="All features">查看完整能力</span></a></div></div>
+        <figure class="scene"><object type="image/svg+xml" data="./assets/illustrations/04-inspection.svg" aria-label="尺寸、时长、帧率和图层信息示意"></object><figcaption><span data-en="Feature demonstration · UI illustration">功能演示 · 界面示意</span><span class="scene-actions"><button type="button" data-action="pause" aria-label="暂停文件信息演示">Ⅱ</button><button type="button" data-action="replay" aria-label="重播文件信息演示">↻</button></span></figcaption></figure>
+      </div><img class="arrow reverse" src="./assets/reference/pag.qq.com/img/new_official_website/arrow.png" alt="">
     </div>
-    <p class="download-note">Windows 10/11 · QuickLook 4.x · WebView2 Runtime · GPL-3.0</p>
-    <div class="install-steps">
-      <h3 data-zh="安装只需三步" data-en="Install in Three Steps">安装只需三步</h3>
-      <ol class="steps-3">
-        <li><span class="num">1</span><div><b data-zh="下载插件" data-en="Download Plugin">下载插件</b><p data-zh="从 GitHub Releases 获取 .qlplugin 文件。" data-en="Get .qlplugin file from GitHub Releases.">从 GitHub Releases 获取 .qlplugin 文件。</p></div></li>
-        <li><span class="num">2</span><div><b data-zh="空格安装" data-en="Space to Install">空格安装</b><p data-zh="在资源管理器中选中该文件按空格，在 QuickLook 预览窗里点击「安装」。" data-en="Select the file in Explorer, press Space, click Install in QuickLook preview.">在资源管理器中选中该文件按空格，在 QuickLook 预览窗里点击「安装」。</p></div></li>
-        <li><span class="num">3</span><div><b data-zh="重启即用" data-en="Restart & Use">重启即用</b><p data-zh="重启 QuickLook，回到任意 .pag 文件按空格即可预览动画。" data-en="Restart QuickLook, go to any .pag file, press Space to preview animation.">重启 QuickLook，回到任意 .pag 文件按空格即可预览动画。</p></div></li>
-      </ol>
-    </div>
-  </div>
-</section>
 
-<section class="dev" id="dev">
-  <div class="wrap">
-    <h2 data-zh="从源码二次开发" data-en="Build from Source">从源码二次开发</h2>
-    <p class="bodycopy" data-zh="PagViewer 是开源的 .NET 插件，欢迎基于它改播放逻辑、扩展导出格式或移植到其他平台。" data-en="PagViewer is an open-source .NET plugin. Welcome to modify playback logic, extend export formats or port to other platforms.">PagViewer 是开源的 .NET 插件，欢迎基于它改播放逻辑、扩展导出格式或移植到其他平台。</p>
-    <div class="dev-grid">
-      <div class="dev-card">
-        <h3 data-zh="前置要求" data-en="Requirements">前置要求</h3>
-        <ul>
-          <li>Windows 10 / 11</li>
-          <li>QuickLook 4.x</li>
-          <li data-zh="WebView2 Runtime（通常已预装）" data-en="WebView2 Runtime (usually pre-installed)">WebView2 Runtime（通常已预装）</li>
-          <li>.NET SDK</li>
-        </ul>
-      </div>
-      <div class="dev-card">
-        <h3 data-zh="克隆并构建" data-en="Clone & Build">克隆并构建</h3>
-        <pre><code>git clone .../QuickLook.Plugin.PagViewer.git
-cd QuickLook.Plugin.PagViewer
-dotnet build -c Release</code></pre>
-      </div>
-      <div class="dev-card">
-        <h3 data-zh="打包为 .qlplugin" data-en="Package as .qlplugin">打包为 .qlplugin</h3>
-        <pre><code>powershell -ExecutionPolicy Bypass `
-  -File Scripts/build.ps1</code></pre>
-        <p class="hint" data-zh="产物为 .qlplugin，装回 QuickLook 即可验证。" data-en="Output is .qlplugin, install back to QuickLook to verify.">产物为 .qlplugin，装回 QuickLook 即可验证。</p>
+    <div class="chapter">
+      <div class="wrap">
+        <div class="detail"><img class="num" src="./assets/reference/pag.qq.com/img/new_official_website/number_5.png" alt="05"><h2 class="title" data-en="Keep the frame you need.">需要的画面，保存下来</h2><p class="text" data-en="Pause at the right moment and save the current frame as PNG beside the PAG file. You can also copy the original file to the clipboard and continue organizing your assets.">定位到需要的画面，将当前帧保存为 PNG，直接留在 PAG 文件旁边。也可以复制原文件到剪贴板，继续整理、传递或处理素材。</p><div class="btn-bar"><a class="btn" href="#download"><img src="./assets/reference/pag.qq.com/img/new_official_website/more-b.png" alt=""><span data-en="Get PagViewer">获取 PagViewer</span></a></div></div>
+        <figure class="scene"><object type="image/svg+xml" data="./assets/illustrations/05-export.svg" aria-label="将动画当前帧保存为 PNG 示意"></object><figcaption><span data-en="Feature demonstration · UI illustration">功能演示 · 界面示意</span><span class="scene-actions"><button type="button" data-action="pause" aria-label="暂停导出演示">Ⅱ</button><button type="button" data-action="replay" aria-label="重播导出演示">↻</button></span></figcaption></figure>
       </div>
     </div>
-    <div class="dev-tree">
-      <h3 data-zh="项目结构" data-en="Project Structure">项目结构</h3>
-      <pre><code>Plugin.cs                  <span data-zh="# IViewer 入口" data-en="# IViewer Entry"># IViewer 入口</span>
-PagViewerPanel.xaml(.cs)   <span data-zh="# WebView2 播放面板" data-en="# WebView2 Player Panel"># WebView2 播放面板</span>
-Resources/Web/             <span data-zh="# libpag WebAssembly / 播放器 UI" data-en="# libpag WebAssembly / Player UI"># libpag WebAssembly / 播放器 UI</span>
-Samples/                   <span data-zh="# 测试用 PAG 示例文件" data-en="# Sample PAG files for testing"># 测试用 PAG 示例文件</span>
-Scripts/                   <span data-zh="# 打包脚本" data-en="# Build scripts"># 打包脚本</span>
-*.csproj / *.sln</code></pre>
+  </section>
+
+
+<section class="product-demo" id="demo"><div class="story-wrap"><div class="demo-copy"><span class="section-eyebrow" data-en="IN ACTION">实际操作演示</span><h2 data-en="See PagViewer in Action">看 PagViewer 如何工作</h2><p data-en="Select a .pag file in File Explorer and press Space. Play, inspect, and export in the same preview window.">在资源管理器里选中 .pag 文件，按空格唤起预览。播放、检查与导出，都在同一个预览窗口。</p><span class="demo-note">Windows · QuickLook + PagViewer</span><button class="demo-play" type="button"><span aria-hidden="true">▷</span><span data-en="Play demonstration">播放演示</span></button></div><div class="demo-media"><video src="./assets/latest/assets/showcase.mp4" controls muted loop playsinline preload="metadata" aria-label="PagViewer 实际操作演示"></video><span class="demo-caption" data-en="Original project recording · 30 seconds">项目原有演示 · 30 秒</span></div></div></section>
+<section class="documentation" id="docs"><div class="story-wrap"><div class="docs-copy"><span class="section-eyebrow" data-en="DOCUMENTATION">使用文档</span><h2 data-en="From installation to everyday use.">从安装到使用，<br>随时查阅。</h2><p data-en="Find installation steps, preview shortcuts, and development notes without leaving the page.">安装方式、预览快捷操作与开发说明，按需要随时查找。</p><a class="docs-source" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer#readme" target="_blank" rel="noopener" data-en="Read the full documentation ↗">查看完整文档 ↗</a>
+<svg class="story-motion docs-illustration" viewBox="0 0 354 170" role="img" aria-labelledby="docs-illustration-title" data-paused="true"><title id="docs-illustration-title" data-en="Find installation, controls, and development guidance in the documentation">在文档中查找安装、快捷操作与开发说明</title><rect x="10" y="14" width="332" height="143" rx="12" fill="#f7faff" stroke="#d7e3f2"/><rect x="28" y="31" width="298" height="109" rx="7" fill="#fff" stroke="#dce5f1"/><path d="M28 55h298" stroke="#e6edf7"/><circle cx="41" cy="43" r="3" fill="#005ad9"/><circle cx="52" cy="43" r="3" fill="#b8cce8"/><path d="M42 72h67M42 85h53M42 98h60M42 111h48" stroke="#c9d9ed" stroke-width="5" stroke-linecap="round"/><rect class="docs-spotlight" x="35" y="62" width="83" height="20" rx="4" fill="#005ad9" fill-opacity=".1" stroke="#005ad9"/><g class="docs-page"><rect x="139" y="70" width="161" height="8" rx="4" fill="#005ad9" fill-opacity=".75"/><rect x="139" y="88" width="151" height="5" rx="3" fill="#cbd9eb"/><rect x="139" y="101" width="136" height="5" rx="3" fill="#dfe7f2"/><rect x="139" y="114" width="109" height="5" rx="3" fill="#dfe7f2"/></g><path class="docs-pointer" d="m109 116 3 21 5-6 7 10 5-3-7-10 8-1z" fill="#fff" stroke="#005ad9" stroke-width="1.5"/></svg><small class="illustration-caption" data-en="Choose a topic → find the answer">选择主题 → 查到答案</small></div>
+<div class="docs-panel"><div class="docs-tabs" role="tablist" aria-label="文档分类"><button id="doc-tab-install" role="tab" type="button" aria-controls="doc-install" aria-selected="true" tabindex="0" data-en="Installation">安装使用</button><button id="doc-tab-controls" role="tab" type="button" aria-controls="doc-controls" aria-selected="false" tabindex="-1" data-en="Controls">快捷操作</button><button id="doc-tab-source" role="tab" type="button" aria-controls="doc-source" aria-selected="false" tabindex="-1" data-en="Development">开发说明</button></div>
+<div id="doc-install" class="docs-body" role="tabpanel" aria-labelledby="doc-tab-install"><h3 data-en="Install the app, then the plugin.">先装本体，再装插件</h3><p data-en="PagViewer extends QuickLook on Windows. Install and run QuickLook before opening the plugin package.">PagViewer 为 Windows QuickLook 增加 PAG 支持。请先安装、启动 QuickLook，再打开插件安装包。</p><ol><li data-en="Install QuickLook 4.x and keep it running.">安装 QuickLook 4.x，并保持运行。</li><li data-en="Download the .qlplugin package from PagViewer Releases.">从 PagViewer Releases 下载 .qlplugin。</li><li data-en="Select the package, press Space, and click Install.">选中安装包，按空格，点击安装。</li><li data-en="Restart QuickLook, select a .pag file, and press Space.">重启 QuickLook，选中 .pag 文件后按空格。</li></ol><a href="#install" data-en="View download links and requirements →">查看下载入口与运行环境 →</a></div>
+<div id="doc-controls" class="docs-body" role="tabpanel" aria-labelledby="doc-tab-controls" hidden><h3 data-en="Inspect the animation at your own pace.">检查动画，操作恰好够用</h3><dl><div><dt>Space</dt><dd data-en="Open or close QuickLook preview">打开或关闭 QuickLook 预览</dd></div><div><dt>Ctrl + <span data-en="wheel">滚轮</span></dt><dd data-en="Zoom the canvas">缩放画布</dd></div><div><dt data-en="Hold & drag">长按拖动</dt><dd data-en="Pan the canvas">平移画布，检查局部细节</dd></div><div><dt data-en="Double-click">双击</dt><dd data-en="Reset the canvas view">重置画布视图</dd></div></dl><p data-en="Use the player controls to seek, inspect file information, switch backgrounds, and export a PNG frame.">通过播放器工具栏定位画面、查看文件信息、切换背景，或将当前帧保存为 PNG。</p></div>
+<div id="doc-source" class="docs-body" role="tabpanel" aria-labelledby="doc-tab-source" hidden><h3 data-en="Understand the plugin before extending it.">从源码理解，再继续扩展</h3><p data-en="The .NET / WPF host embeds the WebView2 player. Resources/Web contains the player UI, libpag SDK, and WebAssembly runtime.">.NET / WPF 宿主嵌入 WebView2 播放器。Resources/Web 存放播放器界面、libpag SDK 与 WebAssembly 运行资源。</p><pre><code>Plugin.cs
+PagViewerPanel.xaml.cs
+Resources/Web/
+Samples/ · Scripts/</code></pre><a href="./develop.html" data-en="View build and packaging instructions →">查看构建与打包说明 →</a></div></div></div></section>  <section class="installation" id="install"><div class="wrap"><div class="install-copy">
+    <span class="section-eyebrow" data-en="INSTALLATION">安装与开始使用</span><h2 data-en="Install QuickLook first. Then add PagViewer.">先装 QuickLook 本体，<br>再装 PagViewer 插件。</h2><p class="install-lead" data-en="PagViewer is a plugin, not a standalone application. Start by installing and running QuickLook on Windows.">PagViewer 是插件，需要 QuickLook 本体提供空格预览窗口。第一次使用，请先安装并运行 QuickLook。</p>
+    <svg class="story-motion install-illustration" viewBox="0 0 354 172" role="img" aria-labelledby="install-illustration-title" data-paused="true"><title id="install-illustration-title" data-en="Install QuickLook first, then add the PagViewer plugin">先安装 QuickLook，再安装 PagViewer 插件</title><defs><linearGradient id="install-blue" x2="1" y2="1"><stop stop-color="#8cbbfa"/><stop offset="1" stop-color="#005ad9"/></linearGradient></defs><rect x="8" y="16" width="160" height="118" rx="10" fill="#fff" stroke="#cfdded"/><path d="M8 37h160" stroke="#e3ebf5"/><circle cx="21" cy="27" r="3" fill="#005ad9"/><text x="27" y="29" font-size="9" fill="#637d9d">QuickLook</text><rect x="28" y="55" width="120" height="60" rx="5" fill="#f2f7ff"/><circle cx="88" cy="84" r="22" fill="url(#install-blue)"/><path d="m78 84 8 8 15-18" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path class="install-flow" d="M178 84h35m-8-7 9 7-9 7" fill="none" stroke="#005ad9" stroke-width="2"/><g class="install-plugin"><rect x="226" y="30" width="96" height="113" rx="10" fill="#fff" stroke="#a8c5ea"/><path d="M292 30v25h30" fill="#eaf2ff" stroke="#a8c5ea"/><image href="./assets/latest/logo.png" x="256" y="64" width="36" height="36"/><rect x="248" y="113" width="52" height="18" rx="4" fill="#005ad9"/><text x="274" y="125" font-size="9" text-anchor="middle" fill="#fff">.qlplugin</text></g></svg><small class="illustration-caption" data-en="QuickLook app → PagViewer plugin">QuickLook 本体 → PagViewer 插件</small>
+    </div><ol class="install-steps">
+      <li><span class="step-number">1</span><div><h3 data-en="Install QuickLook">安装 QuickLook 本体</h3><p data-en="Download QuickLook for Windows and keep it running in the system tray.">下载 Windows 版 QuickLook，安装并启动，确认它正在系统托盘运行。</p><a href="https://github.com/QL-Win/QuickLook/releases" target="_blank" rel="noopener" data-en="Download QuickLook ↗">下载 QuickLook 本体 ↗</a></div></li>
+      <li><span class="step-number">2</span><div><h3 data-en="Download PagViewer">下载 PagViewer 插件</h3><p data-en="Get the .qlplugin file from PagViewer Releases. The source ZIP is not the plugin installer.">从 PagViewer Releases 获取 .qlplugin 文件；源码 ZIP 不是插件安装包。</p><a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases/latest/download/QuickLook.Plugin.PagViewer.qlplugin" data-en="Download the latest .qlplugin ↓">下载最新版 .qlplugin ↓</a></div></li>
+      <li><span class="step-number">3</span><div><h3 data-en="Press Space to install">选中安装包，按空格安装</h3><p data-en="With QuickLook running, select the .qlplugin file, press Space, and confirm Install in its window.">保持 QuickLook 运行，在资源管理器中选中 .qlplugin，按空格，在弹出的窗口中点击安装。</p><span class="install-key"><kbd>Space</kbd><span data-en=" → Install"> → 安装</span></span></div></li>
+      <li><span class="step-number">4</span><div><h3 data-en="Restart and preview">重启 QuickLook，开始预览</h3><p data-en="Restart QuickLook after installation. Select a .pag file and press Space to preview.">安装完成后重启 QuickLook。选中任意 .pag 文件，再按空格即可预览动画。</p><a href="#preview" data-en="Explore the preview workflow ↑">回看预览方式 ↑</a></div></li>
+    </ol><div class="requirements-strip"><b data-en="Before you start">运行环境</b><span>Windows 10 / 11</span><span>QuickLook 4.x</span><a href="https://developer.microsoft.com/microsoft-edge/webview2/" target="_blank" rel="noopener">WebView2 Runtime ↗</a></div>
+  </div></section>
+  <section class="download" id="download">
+    <div class="wrap">
+      <div class="package-art" aria-label="PAG 下载包装插画"><div class="package-art-inner"></div></div>
+      <h2 data-en="Download PagViewer for free">免费下载 PagViewer</h2>
+      <p data-en="Bring PAG animation preview to your everyday QuickLook workflow.">把 PAG 动画预览，放进每天都在用的 QuickLook。</p>
+      <div class="download-buttons"><a class="download-button" href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/releases/latest/download/QuickLook.Plugin.PagViewer.qlplugin"><img src="./assets/latest/logo.png" alt=""><span data-en="PagViewer Download">PagViewer 下载</span></a><a class="download-button" href="https://quicklookapp.vercel.app/" target="_blank" rel="noopener"><img src="./assets/latest/assets/quicklook-icon.png" alt=""><span data-en="QuickLook official download ↗">QuickLook 官方下载 ↗</span></a><a class="download-button" href="./develop.html"><img src="./assets/reference/pag.qq.com/img/new_official_website/github_top.png" alt=""><span data-en="Source & build →">源码与构建 →</span></a></div>
+      <span class="download-note">.qlplugin · Windows 10 / 11 · QuickLook 4.x · GPL-3.0</span>
     </div>
-    <p class="dev-link"><a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer" data-zh="在 GitHub 查看完整源码 ↗" data-en="View full source on GitHub ↗">在 GitHub 查看完整源码 ↗</a></p>
-  </div>
-</section>
+  </section>
 </main>
-
-<footer>
-  <div class="wrap foot">
-    <span data-zh="PagViewer 是 QuickLook 的 PAG 文件预览插件。" data-en="PagViewer is a QuickLook plugin for previewing PAG files.">PagViewer 是 QuickLook 的 PAG 文件预览插件。</span>
-    <span>
-      <a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer" data-zh="GitHub 项目" data-en="GitHub Project">GitHub 项目</a> ·
-      <a href="https://quicklookapp.vercel.app/" data-zh="QuickLook 官网" data-en="QuickLook Website">QuickLook 官网</a> ·
-      <a href="https://github.com/QL-Win/QuickLook" data-zh="QuickLook 仓库" data-en="QuickLook Repo">QuickLook 仓库</a> ·
-      <a href="https://github.com/QL-Win/QuickLook/wiki/Available-Plugins" data-zh="QuickLook 插件目录" data-en="QuickLook Plugins">QuickLook 插件目录</a> ·
-      <a href="https://pag.io/" data-zh="PAG 官网" data-en="PAG Website">PAG 官网</a>
-    </span>
-  </div>
-</footer>
-
-<script>
-let currentLang = localStorage.getItem('pag-lang') || 'zh';
-
-function toggleLang() {
-  currentLang = currentLang === 'zh' ? 'en' : 'zh';
-  localStorage.setItem('pag-lang', currentLang);
-  applyLang();
-}
-
-function applyLang() {
-  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
-  
-  // Update elements with data-zh/data-en attributes
-  document.querySelectorAll('[data-zh][data-en]').forEach(el => {
-    const text = el.getAttribute('data-' + currentLang);
-    if (text) {
-      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-        el.placeholder = text;
-      } else {
-        el.innerHTML = text;
-      }
-    }
-  });
-  
-  // Update lang switch button display
-  document.querySelectorAll('.lang-zh').forEach(el => {
-    el.style.fontWeight = currentLang === 'zh' ? '700' : '400';
-    el.style.color = currentLang === 'zh' ? 'var(--blue)' : 'inherit';
-  });
-  document.querySelectorAll('.lang-en').forEach(el => {
-    el.style.fontWeight = currentLang === 'en' ? '700' : '400';
-    el.style.color = currentLang === 'en' ? 'var(--blue)' : 'inherit';
-  });
-}
-
-// Apply language on load
-applyLang();
-</script>
+<footer class="page-footer"><div class="wrap"><div><strong>PagViewer</strong><p data-en="An independent QuickLook plugin for PAG files.">独立的 QuickLook PAG 文件预览插件。</p></div><div><a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/QL-Win/QuickLook" target="_blank" rel="noopener">QuickLook</a><a href="https://pag.io/" target="_blank" rel="noopener" data-en="About PAG">了解 PAG</a></div></div><div class="wrap footer-fine"><span>GPL-3.0 · PagViewer</span><span data-en="PAG branding and the download package artwork are reused from pag.io. This is an independent plugin.">PAG 标识与下载包装复用自 pag.io，本页为独立插件页面。</span></div></footer>
+</div>
+<div class="help"><button id="help-toggle" type="button" aria-expanded="false" aria-controls="help-panel" aria-label="常见问题"><img src="./assets/reference/pag.qq.com/img/new_official_website/cs.png" width="96" height="96" alt=""></button><aside id="help-panel" hidden><h2 data-en="A few useful answers">开始之前，你可能想知道</h2><details><summary data-en="Is QuickLook required?">需要先安装 QuickLook 吗？</summary><p data-en="Yes. PagViewer is a plugin for QuickLook 4.x, not a standalone player.">需要。PagViewer 是 QuickLook 4.x 的插件，需要配合 QuickLook 使用。</p></details><details><summary data-en="Does it work on macOS?">支持 macOS 吗？</summary><p data-en="This plugin is for Windows 10/11. It is not a macOS Quick Look extension.">此插件面向 Windows 10/11，不是 macOS 的 Quick Look 扩展。</p></details><details><summary data-en="Where is the PNG saved?">导出的 PNG 保存在哪里？</summary><p data-en="The current frame is saved beside the original PAG file.">当前帧导出的 PNG 会保存在 PAG 文件旁边。</p></details><a href="https://github.com/yancongya/QuickLook.Plugin.PagViewer/issues" target="_blank" rel="noopener" data-en="View issues and feedback">查看问题与反馈</a></aside></div>
+<script type="module" src="./page.js"></script>
 </body>
 </html>
