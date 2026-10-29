@@ -1,4 +1,4 @@
-# Build and package QuickLook.Plugin.PagViewer
+﻿# Build and package QuickLook.Plugin.PagViewer
 param(
     [switch]$Clean,
     [switch]$SkipBuild,

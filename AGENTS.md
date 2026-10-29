@@ -42,7 +42,8 @@ Plugin.cs (IViewer)
 
 - Target framework: .NET Framework 4.6.2
 - Namespace: `QuickLook.Plugin.PagViewer`
-- Follow official QuickLook plugin structure (see VideoViewer, ImageViewer)
+- Follow official QuickLook plugin structure and quicklook-plugin-ship SKILL.md (see VideoViewer, ImageViewer)
 - XAML files at project root (not in subdirectories)
 - Web assets in `Resources/Web/`
 - Native P/Invoke stubs in `Native/`
+- `.ps1` files must stay UTF-8 with BOM (PowerShell 5.1 Chinese comments)
