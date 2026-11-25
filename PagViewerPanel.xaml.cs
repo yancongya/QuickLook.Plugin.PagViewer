@@ -273,12 +273,14 @@ namespace QuickLook.Plugin.PagViewer
                 var bytes = File.ReadAllBytes(_pagFilePath);
                 var base64 = Convert.ToBase64String(bytes);
 
+                var fileInfo = new System.IO.FileInfo(_pagFilePath);
                 var msg = new
                 {
                     type = "loadFile",
                     libpagSrc = "https://pagassets.local/libpag.min.js",
                     wasmSrc = "https://pagassets.local/libpag.wasm",
-                    base64 = base64
+                    base64 = base64,
+                    fileSize = fileInfo.Length
                 };
 
                 var jsonMsg = JsonSerializer.Serialize(msg);

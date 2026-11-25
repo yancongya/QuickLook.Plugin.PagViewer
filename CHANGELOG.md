@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+## [1.3.0] - 2026-11-25
+
+### Added
+- Frame-by-frame stepping controls (previous/next frame buttons and Left/Right arrow keys, Space to play/pause)
+- Frame counter in playback bar (`currentFrame/totalFrames`) and top-left dimensions info
+- Enhanced File Info panel (`fileSize`, `numVideos`, `tagLevel`, `maxSupportedTagLevel`, `timeStretchMode`)
+- Unified bottom-right transparent Info & Performance panel via Info button or `L` key (File Info grid + live FPS/Flush waveform chart, draggable, text shadow for readability over bright animations)
+- Independent File Structure & Layer Inspector drawer (toggle via Structure button or `F` key, full bilingual i18n)
+- Canvas click layer picking (`getLayersUnderPoint`) and live text/image replacement preview for editable layers
+
+### Fixed
+- Removed stale `perfOverlay` / `perfDrag` references in auto-hide logic
+
 ## [1.2.0] - 2026-08-24
 
 ### Added

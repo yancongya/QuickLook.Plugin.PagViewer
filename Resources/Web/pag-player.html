@@ -83,28 +83,6 @@
         #topBar .btn:hover { background: rgba(255,255,255,0.1); }
         #topBar .btn .icon { font-size: 12px; }
 
-        /* Metadata panel (like LottieFilesViewer textMeta) */
-        #metaPanel {
-            position: absolute; top: 36px; right: 8px;
-            background: var(--control-bg);
-            padding: 8px 12px; border-radius: 4px;
-            color: var(--fg); font-size: 11px;
-            line-height: 1.6; z-index: 21;
-            display: none; max-width: 280px;
-            max-height: 300px; overflow-y: auto;
-        }
-        #metaPanel.show { display: block; }
-        #metaPanel .label { color: var(--fg-alt); }
-        #metaPanel hr { border-color: rgba(255,255,255,0.1); margin: 4px 0; }
-        #metaPanel .meta-row { display: flex; justify-content: space-between; }
-        #metaPanel .meta-row .label { flex: 0 0 auto; }
-        #metaPanel .meta-row .value { text-align: right; }
-        /* Custom scrollbar */
-        #metaPanel::-webkit-scrollbar { width: 4px; }
-        #metaPanel::-webkit-scrollbar-track { background: transparent; }
-        #metaPanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-        #metaPanel::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-
         /* Color picker popup */
         #colorPicker {
             position: absolute; top: 36px; right: 8px;
@@ -238,6 +216,125 @@
             opacity: 0; z-index: 30; transition: opacity 0.3s;
         }
         #toast.show { opacity: 1; }
+
+        /* Unified Info & Performance overlay (bottom-right, transparent with text shadow) */
+        #perfOverlay {
+            position: absolute; bottom: 40px; right: 10px;
+            width: 248px; background: transparent;
+            border: none; box-shadow: none; padding: 6px 8px;
+            color: #f4f4f4; font-size: 10px;
+            font-family: 'Segoe UI', sans-serif;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.85), 0 0 2px rgba(0,0,0,0.95);
+            z-index: 18; display: none;
+        }
+        #perfOverlay.show { display: block; }
+        #perfHeader {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 5px; cursor: move; color: #d8d8d8;
+            font-size: 10px; font-weight: 600;
+        }
+        #perfMetaGrid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 4px 6px; margin-bottom: 6px;
+            padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.18);
+        }
+        .pm-cell { display: flex; flex-direction: column; min-width: 0; }
+        .pm-k { font-size: 9px; color: #cccccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pm-v { font-size: 11px; font-weight: 600; color: #ffffff; font-family: 'Consolas', 'Segoe UI', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pm-sub {
+            grid-column: 1 / -1; display: flex; justify-content: space-between;
+            font-size: 9px; color: #dcdcdc; padding-top: 2px;
+        }
+        #perfChart {
+            width: 100%; height: 48px; display: block;
+            background: transparent; border-radius: 2px;
+            margin-bottom: 4px;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9));
+        }
+        .perf-row {
+            display: grid; grid-template-columns: 42px 1fr 1fr 1fr;
+            gap: 2px; line-height: 1.45;
+            font-family: 'Consolas', 'Segoe UI', monospace;
+        }
+        .perf-row .p-name { color: #d0d0d0; font-family: 'Segoe UI', sans-serif; }
+        .perf-row .p-val { text-align: right; color: #ffffff; }
+
+        /* File structure & Layer inspector side drawer (independent) */
+        #structPanel {
+            position: absolute; top: 36px; right: 8px; bottom: 40px;
+            width: 270px; background: var(--control-bg);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 4px; color: var(--fg); font-size: 11px;
+            z-index: 21; display: none; flex-direction: column;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+        }
+        #structPanel.show { display: flex; }
+
+        .struct-tabs {
+            display: flex; border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .struct-tab {
+            flex: 1; padding: 6px 6px; text-align: center;
+            background: transparent; border: none; color: var(--fg-alt);
+            cursor: pointer; font-size: 11px; transition: all 0.15s;
+            border-bottom: 2px solid transparent; white-space: nowrap;
+        }
+        .struct-tab.active {
+            color: var(--accent); border-bottom-color: var(--accent);
+            background: rgba(118,185,237,0.08);
+        }
+        .struct-body {
+            flex: 1; overflow-y: auto; padding: 8px 10px;
+        }
+        .struct-body::-webkit-scrollbar { width: 4px; }
+        .struct-body::-webkit-scrollbar-track { background: transparent; }
+        .struct-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .tree-node { user-select: text; }
+        .tree-row {
+            display: flex; align-items: center; gap: 4px;
+            padding: 2px 4px; border-radius: 2px; cursor: pointer;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tree-row:hover { background: rgba(255,255,255,0.08); }
+        .tree-row.selected { background: rgba(118,185,237,0.25); color: #fff; }
+        .tree-toggle {
+            width: 12px; text-align: center; font-size: 9px;
+            color: var(--fg-alt); flex-shrink: 0;
+        }
+        .tree-badge {
+            font-size: 9px; padding: 0 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.1); color: var(--accent);
+            flex-shrink: 0;
+        }
+        .tree-label { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .tree-prop {
+            display: flex; justify-content: space-between;
+            padding: 1px 4px 1px 18px; color: var(--fg-alt); font-size: 10px;
+        }
+        .tree-prop span:last-child { color: var(--fg); }
+        .tree-children { padding-left: 12px; }
+        .tree-children.collapsed { display: none; }
+        .insp-empty { color: var(--fg-alt); padding: 12px 4px; text-align: center; line-height: 1.5; }
+        .insp-row {
+            display: flex; justify-content: space-between; padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .insp-row .k { color: var(--fg-alt); }
+        .insp-row .v { color: var(--fg); text-align: right; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+        .insp-edit { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .insp-edit input[type="text"] {
+            width: 100%; padding: 4px 6px; background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 3px;
+            color: var(--fg); font-size: 11px; outline: none;
+        }
+        .insp-edit input[type="text"]:focus { border-color: var(--accent); }
+        .insp-btn {
+            padding: 4px 8px; background: rgba(118,185,237,0.2);
+            border: 1px solid var(--accent); border-radius: 3px;
+            color: var(--accent); cursor: pointer; font-size: 11px;
+        }
+        .insp-btn:hover { background: rgba(118,185,237,0.35); }
     </style>
 </head>
 <body>
@@ -252,8 +349,12 @@
 
         <!-- Top-right toolbar -->
         <div id="topBar">
-            <!-- \xE792 = Info -->
-            <button class="btn" id="btnMeta" title="文件信息">
+            <!-- \xE8FD = File Structure -->
+            <button class="btn" id="btnStruct" title="文件结构 (F)">
+                <span class="icon">&#xE8FD;</span>
+            </button>
+            <!-- \xE946 = Info & Performance -->
+            <button class="btn" id="btnMeta" title="文件信息与性能监控 (L)">
                 <span class="icon">&#xE946;</span>
             </button>
             <!-- \xE74B = Save -->
@@ -265,7 +366,24 @@
                 <span class="icon">&#xEF1F;</span>
             </button>
         </div>
-        <div id="metaPanel"></div>
+        <div id="structPanel">
+            <div class="struct-tabs">
+                <button class="struct-tab active" data-tab="tree" id="tabTree">文件结构</button>
+                <button class="struct-tab" data-tab="inspector" id="tabInspector">图层详情</button>
+            </div>
+            <div class="struct-body" id="structBody"></div>
+            <div class="struct-body" id="inspectorBody" style="display:none;"></div>
+        </div>
+        <div id="perfOverlay">
+            <div id="perfHeader">
+                <span id="perfTitle">文件信息与性能</span>
+                <span id="perfFrameLabel">0 / 0</span>
+            </div>
+            <div id="perfMetaGrid"></div>
+            <canvas id="perfChart" width="232" height="48"></canvas>
+            <div class="perf-row"><span class="p-name" id="pFpsLabel">帧率</span><span class="p-val" id="pFpsCur">0</span><span class="p-val" id="pFpsAvg">平均 0</span><span class="p-val" id="pFpsMin">最低 0</span></div>
+            <div class="perf-row"><span class="p-name" id="pFlushLabel">渲染</span><span class="p-val" id="pFlushCur">0ms</span><span class="p-val" id="pFlushAvg">平均 0</span><span class="p-val" id="pFlushMax">最高 0</span></div>
+        </div>
         <div id="colorPicker">
             <div class="colorSwatches">
                 <div class="swatch" data-bg="default" style="background:var(--bg)" title="默认"></div>
@@ -279,6 +397,12 @@
         <div id="controls">
             <button class="btn" id="btnPlayPause" title="播放 / 暂停">
                 <span class="icon">&#xE768;</span>
+            </button>
+            <button class="btn" id="btnPrevFrame" title="上一帧">
+                <span class="icon">&#xE76B;</span>
+            </button>
+            <button class="btn" id="btnNextFrame" title="下一帧">
+                <span class="icon">&#xE76C;</span>
             </button>
             <button class="btn active" id="btnLoop" title="循环">
                 <span class="icon">&#xE777;</span>
@@ -307,7 +431,7 @@
             'BTN_PlayPause': {zh:'播放 / 暂停',en:'Play / Pause'},
             'BTN_Loop': {zh:'循环',en:'Loop'},
             'BTN_Volume': {zh:'音量',en:'Volume'},
-            'BTN_Meta': {zh:'文件信息',en:'Info'},
+            'BTN_Meta': {zh:'文件信息与性能监控 (L)',en:'Info & Performance (L)'},
             'BTN_Save': {zh:'保存为PNG',en:'Save as PNG'},
             'BTN_Background': {zh:'切换背景',en:'Background'},
             'BG_Default': {zh:'默认',en:'Default'},
@@ -332,7 +456,56 @@
             'META_FPS': {zh:'帧率',en:'FPS'},
             'META_Layers': {zh:'图层',en:'Layers'},
             'META_Images': {zh:'图片',en:'Images'},
-            'META_Texts': {zh:'文本',en:'Texts'}
+            'META_Texts': {zh:'文本',en:'Texts'},
+            'META_Videos': {zh:'视频',en:'Videos'},
+            'META_TagLevel': {zh:'标签版本',en:'Tag Level'},
+            'META_FileSize': {zh:'文件大小',en:'File Size'},
+            'META_SDKVersion': {zh:'SDK 版本',en:'SDK Version'},
+            'META_TimeStretch': {zh:'时间伸缩',en:'Time Stretch'},
+            'BTN_PrevFrame': {zh:'上一帧',en:'Previous frame'},
+            'BTN_NextFrame': {zh:'下一帧',en:'Next frame'},
+            'BTN_Perf': {zh:'性能监控 (L)',en:'Performance (L)'},
+            'BTN_Struct': {zh:'文件结构 (F)',en:'File Structure (F)'},
+            'TAB_Structure': {zh:'文件结构',en:'File Structure'},
+            'TAB_Inspector': {zh:'图层详情',en:'Layer Inspector'},
+            'INSP_Empty': {zh:'点击文件结构中的图层或直接点击画布元素查看详情',en:'Select a layer in File Structure or click on canvas to inspect'},
+            'INSP_ApplyText': {zh:'应用文本',en:'Apply Text'},
+            'INSP_ReplaceImage': {zh:'替换图片...',en:'Replace Image...'},
+            'TOAST_TextUpdated': {zh:'文本已更新',en:'Text updated'},
+            'TOAST_ImageUpdated': {zh:'图片已替换',en:'Image replaced'},
+            'TAB_Info': {zh:'文件信息',en:'File Info'},
+            'PERF_Title': {zh:'文件信息与性能',en:'Info & Performance'},
+            'PERF_FPS': {zh:'帧率',en:'FPS'},
+            'PERF_Flush': {zh:'渲染',en:'Flush'},
+            'PERF_Avg': {zh:'平均',en:'AVG'},
+            'PERF_Min': {zh:'最低',en:'MIN'},
+            'PERF_Max': {zh:'最高',en:'MAX'},
+            'TREE_Root': {zh:'根节点',en:'root'},
+            'TREE_File': {zh:'文件',en:'File'},
+            'TREE_Size': {zh:'尺寸',en:'Size'},
+            'TREE_VideosLayers': {zh:'视频 / 图层',en:'Videos / Layers'},
+            'INSP_Name': {zh:'名称',en:'Name'},
+            'INSP_Type': {zh:'类型',en:'Type'},
+            'INSP_StartTime': {zh:'开始时间',en:'Start Time'},
+            'INSP_Duration': {zh:'时长',en:'Duration'},
+            'INSP_Alpha': {zh:'透明度',en:'Alpha'},
+            'INSP_Visible': {zh:'可见性',en:'Visible'},
+            'INSP_EditableIndex': {zh:'可编辑索引',en:'Editable Index'},
+            'INSP_Unnamed': {zh:'未命名图层',en:'Unnamed'},
+            'BOOL_True': {zh:'是',en:'Yes'},
+            'BOOL_False': {zh:'否',en:'No'},
+            'LAYER_Unknown': {zh:'未知',en:'Unknown'},
+            'LAYER_Null': {zh:'空图层',en:'Null'},
+            'LAYER_Solid': {zh:'纯色',en:'Solid'},
+            'LAYER_Text': {zh:'文本',en:'Text'},
+            'LAYER_Shape': {zh:'形状',en:'Shape'},
+            'LAYER_Image': {zh:'图片',en:'Image'},
+            'LAYER_PreCompose': {zh:'预合成',en:'PreCompose'},
+            'LAYER_Camera': {zh:'摄像机',en:'Camera'},
+            'STRETCH_None': {zh:'不伸缩',en:'None'},
+            'STRETCH_Scale': {zh:'缩放',en:'Scale'},
+            'STRETCH_Repeat': {zh:'循环',en:'Repeat'},
+            'STRETCH_RepeatLastFrame': {zh:'定格末帧',en:'RepeatLastFrame'}
         };
         var lang = (navigator.language || 'zh').startsWith('zh') ? 'zh' : 'en';
         var _t = _defaultT;
@@ -349,8 +522,20 @@
         var btnBg = document.getElementById('btnBg');
         var btnMeta = document.getElementById('btnMeta');
         var btnSave = document.getElementById('btnSave');
-        var btnPerf = document.getElementById('btnPerf');
-        var metaPanel = document.getElementById('metaPanel');
+        var btnStruct = document.getElementById('btnStruct');
+        var structPanel = document.getElementById('structPanel');
+        var perfOverlay = document.getElementById('perfOverlay');
+        var perfHeader = document.getElementById('perfHeader');
+        var perfChart = document.getElementById('perfChart');
+        var perfFrameLabel = document.getElementById('perfFrameLabel');
+        var perfTitle = document.getElementById('perfTitle');
+        var pFpsLabel = document.getElementById('pFpsLabel');
+        var pFlushLabel = document.getElementById('pFlushLabel');
+        var structBody = document.getElementById('structBody');
+        var inspectorBody = document.getElementById('inspectorBody');
+        var tabTree = document.getElementById('tabTree');
+        var tabInspector = document.getElementById('tabInspector');
+        var perfMetaGrid = document.getElementById('perfMetaGrid');
         var colorPicker = document.getElementById('colorPicker');
         var customColor = document.getElementById('customColor');
         var volumeIcon = document.getElementById('volumeIcon');
@@ -362,10 +547,13 @@
         var timeEl = document.getElementById('time');
         var infoEl = document.getElementById('info');
         var toastEl = document.getElementById('toast');
+        var btnPrevFrame = document.getElementById('btnPrevFrame');
+        var btnNextFrame = document.getElementById('btnNextFrame');
 
         var pag = null, pagFile = null, pagView = null;
         var isPlaying = false, isLooping = true, isDragging = false;
-        var duration = 0, pagWidth = 0, pagHeight = 0;
+        var duration = 0, pagWidth = 0, pagHeight = 0, totalFrames = 0;
+        var fileSize = 0;
         var hideTimer = null;
 
         // Apply i18n to UI elements
@@ -378,6 +566,19 @@
             btnMeta.title = T('BTN_Meta');
             btnSave.title = T('BTN_Save');
             btnBg.title = T('BTN_Background');
+            if (btnPrevFrame) btnPrevFrame.title = T('BTN_PrevFrame');
+            if (btnNextFrame) btnNextFrame.title = T('BTN_NextFrame');
+            if (btnStruct) btnStruct.title = T('BTN_Struct');
+            if (tabTree) tabTree.textContent = T('TAB_Structure');
+            if (tabInspector) tabInspector.textContent = T('TAB_Inspector');
+            if (perfTitle) perfTitle.textContent = T('PERF_Title');
+            if (pFpsLabel) pFpsLabel.textContent = T('PERF_FPS');
+            if (pFlushLabel) pFlushLabel.textContent = T('PERF_Flush');
+            if (pagMeta) {
+                updateMetaPanel();
+                refreshStructureTree();
+                renderInspector(selectedLayer);
+            }
             document.querySelector('.swatch[data-bg="default"]').title = T('BG_Default');
             document.querySelector('.swatch[data-bg="checker"]').title = T('BG_Checker');
             document.querySelector('.swatch[data-bg="white"]').title = T('BG_White');
@@ -399,12 +600,65 @@
         var ICON_VOL1 = '\uE993';
         var ICON_VOL0 = '\uE74F';
 
-        // --- Performance monitoring (simplified) ---
+        // --- Performance monitoring & waveform profiler ---
         var currentFps = 0;
         var currentFlushTime = 0;
+        var perfVisible = false;
+        var perfHistory = [];
+        var PERF_MAX_SAMPLES = 64;
+        var perfDrag = { active: false, startX: 0, startY: 0, origLeft: 0, origTop: 0 };
+
+        function setPerfVisible(show) {
+            perfVisible = show;
+            perfOverlay.classList.toggle('show', perfVisible);
+            if (perfVisible) drawPerfChart();
+        }
+
+        if (perfHeader) {
+            perfHeader.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                e.stopPropagation();
+                var rect = perfOverlay.getBoundingClientRect();
+                perfOverlay.style.right = 'auto';
+                perfOverlay.style.bottom = 'auto';
+                perfOverlay.style.left = rect.left + 'px';
+                perfOverlay.style.top = rect.top + 'px';
+                perfDrag.active = true;
+                perfDrag.startX = e.clientX;
+                perfDrag.startY = e.clientY;
+                perfDrag.origLeft = rect.left;
+                perfDrag.origTop = rect.top;
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!perfDrag.active) return;
+                perfOverlay.style.left = (perfDrag.origLeft + e.clientX - perfDrag.startX) + 'px';
+                perfOverlay.style.top = (perfDrag.origTop + e.clientY - perfDrag.startY) + 'px';
+            });
+            document.addEventListener('mouseup', function() { perfDrag.active = false; });
+        }
+
+        function drawPerfChart() {
+            if (!perfChart) return;
+            var ctx = perfChart.getContext('2d');
+            var w = perfChart.width, h = perfChart.height;
+            ctx.clearRect(0, 0, w, h);
+            if (perfHistory.length === 0) return;
+
+            var maxFlush = 33;
+            for (var i = 0; i < perfHistory.length; i++) {
+                if (perfHistory[i].flush > maxFlush) maxFlush = perfHistory[i].flush;
+            }
+            var barW = w / PERF_MAX_SAMPLES;
+            var startX = w - perfHistory.length * barW;
+            for (var j = 0; j < perfHistory.length; j++) {
+                var item = perfHistory[j];
+                var bh = Math.max(2, Math.min(h - 2, (item.flush / maxFlush) * (h - 4)));
+                ctx.fillStyle = item.flush <= 10 ? '#4CAF50' : (item.flush <= 20 ? '#FFC107' : '#F44336');
+                ctx.fillRect(startX + j * barW, h - bh, Math.max(1, barW - 1), bh);
+            }
+        }
 
         function updatePerfDisplay() {
-            // Update FPS in info element
             var fpsColor = currentFps >= 50 ? '#4CAF50' : (currentFps >= 30 ? '#FFC107' : '#F44336');
             var fpsEl = document.getElementById('fpsDisplay');
             if (fpsEl) {
@@ -412,12 +666,35 @@
                 fpsEl.style.color = fpsColor;
             }
 
-            // Update progress bar color based on flush time
             var barColor;
-            if (currentFlushTime <= 10) barColor = '#4CAF50';      // 绿色：流畅
-            else if (currentFlushTime <= 20) barColor = '#FFC107';  // 黄色：中等
-            else barColor = '#F44336';                              // 红色：卡顿
+            if (currentFlushTime <= 10) barColor = '#4CAF50';
+            else if (currentFlushTime <= 20) barColor = '#FFC107';
+            else barColor = '#F44336';
             progressFill.style.background = barColor;
+
+            perfHistory.push({ fps: currentFps, flush: currentFlushTime });
+            if (perfHistory.length > PERF_MAX_SAMPLES) perfHistory.shift();
+
+            if (perfVisible) {
+                var sumFps = 0, minFps = 999, sumFlush = 0, maxFlush = 0;
+                for (var i = 0; i < perfHistory.length; i++) {
+                    var s = perfHistory[i];
+                    sumFps += s.fps; if (s.fps < minFps) minFps = s.fps;
+                    sumFlush += s.flush; if (s.flush > maxFlush) maxFlush = s.flush;
+                }
+                var n = perfHistory.length;
+                document.getElementById('pFpsCur').textContent = currentFps;
+                document.getElementById('pFpsAvg').textContent = T('PERF_Avg') + ' ' + Math.round(sumFps / n);
+                document.getElementById('pFpsMin').textContent = T('PERF_Min') + ' ' + (minFps === 999 ? 0 : minFps);
+                document.getElementById('pFlushCur').textContent = currentFlushTime.toFixed(1) + 'ms';
+                document.getElementById('pFlushAvg').textContent = T('PERF_Avg') + ' ' + (sumFlush / n).toFixed(1);
+                document.getElementById('pFlushMax').textContent = T('PERF_Max') + ' ' + maxFlush.toFixed(1);
+                if (pagView && totalFrames > 0) {
+                    var cf = Math.round(pagView.getProgress() * totalFrames);
+                    perfFrameLabel.textContent = cf + ' / ' + totalFrames;
+                }
+                drawPerfChart();
+            }
         }
 
         // --- Toast ---
@@ -429,42 +706,63 @@
             toastTimer = setTimeout(function() { toastEl.classList.remove('show'); }, 1500);
         }
 
-        // --- Metadata panel (like LottieFilesViewer textMeta) ---
+        // --- Unified Info & Performance Monitor Panel ---
+        function getStretchModeText(mode) {
+            var keys = ['STRETCH_None', 'STRETCH_Scale', 'STRETCH_Repeat', 'STRETCH_RepeatLastFrame'];
+            return mode != null && keys[mode] ? T(keys[mode]) : (mode != null ? String(mode) : '-');
+        }
+
         function updateMetaPanel() {
-            if (!pagMeta) return;
+            if (!pagMeta || !perfMetaGrid) return;
             var fps = pagMeta.fps || 30;
             var dur = (duration / 1000000).toFixed(2);
-            metaPanel.innerHTML =
-                '<div class="meta-row"><span class="label">' + T('META_Width') + '</span><span class="value">' + pagWidth + 'px</span></div>' +
-                '<div class="meta-row"><span class="label">' + T('META_Height') + '</span><span class="value">' + pagHeight + 'px</span></div>' +
-                '<div class="meta-row"><span class="label">' + T('META_Duration') + '</span><span class="value">' + dur + 's</span></div>' +
-                '<div class="meta-row"><span class="label">' + T('META_FPS') + '</span><span class="value">' + fps + '</span></div>' +
-                '<div class="meta-row"><span class="label">' + T('META_Layers') + '</span><span class="value">' + (pagMeta.numLayers || '-') + '</span></div>' +
-                '<div class="meta-row"><span class="label">' + T('META_Images') + '</span><span class="value">' + (pagMeta.numImages || '-') + '</span></div>' +
-                '<div class="meta-row"><span class="label">' + T('META_Texts') + '</span><span class="value">' + (pagMeta.numTexts || '-') + '</span></div>';
+            var fileSizeStr = '-';
+            if (pagMeta.fileSize > 0) {
+                var mb = pagMeta.fileSize / (1024 * 1024);
+                fileSizeStr = mb >= 1 ? mb.toFixed(2) + 'MB' : (pagMeta.fileSize / 1024).toFixed(0) + 'KB';
+            }
+            var stretchStr = getStretchModeText(pagMeta.timeStretchMode);
+            var sdkVer = (pagMeta.tagLevel != null ? pagMeta.tagLevel : '-') + '/' + (pagMeta.maxTagLevel != null ? pagMeta.maxTagLevel : '-');
+            perfMetaGrid.innerHTML =
+                '<div class="pm-cell"><span class="pm-k">' + T('META_Duration') + '</span><span class="pm-v">' + dur + 's</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_FPS') + '</span><span class="pm-v">' + fps + '</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_Width') + '</span><span class="pm-v">' + pagWidth + '</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_Height') + '</span><span class="pm-v">' + pagHeight + '</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_FileSize') + '</span><span class="pm-v">' + fileSizeStr + '</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_Videos') + '</span><span class="pm-v">' + (pagMeta.numVideos != null ? pagMeta.numVideos : '-') + '</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_Layers') + '</span><span class="pm-v">' + (pagMeta.numLayers != null ? pagMeta.numLayers : '-') + '</span></div>' +
+                '<div class="pm-cell"><span class="pm-k">' + T('META_TagLevel') + '</span><span class="pm-v">' + sdkVer + '</span></div>' +
+                '<div class="pm-sub">' +
+                    '<span>' + T('META_Images') + ': ' + (pagMeta.numImages != null ? pagMeta.numImages : '-') + '</span>' +
+                    '<span>' + T('META_Texts') + ': ' + (pagMeta.numTexts != null ? pagMeta.numTexts : '-') + '</span>' +
+                    '<span>' + stretchStr + '</span>' +
+                '</div>';
         }
 
         var metaPinned = false;
-        btnMeta.addEventListener('click', function(e) {
-            e.stopPropagation();
-            metaPinned = !metaPinned;
+        function toggleMetaPanel(forceOpen) {
+            metaPinned = typeof forceOpen === 'boolean' ? forceOpen : !metaPinned;
             btnMeta.classList.toggle('pinned', metaPinned);
             if (metaPinned) {
                 updateMetaPanel();
-                metaPanel.classList.add('show');
+                setPerfVisible(true);
             } else {
-                metaPanel.classList.remove('show');
+                setPerfVisible(false);
             }
+        }
+        btnMeta.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMetaPanel();
         });
         btnMeta.addEventListener('mouseenter', function() {
             if (!metaPinned) {
                 updateMetaPanel();
-                metaPanel.classList.add('show');
+                setPerfVisible(true);
             }
         });
         btnMeta.addEventListener('mouseleave', function() {
             if (!metaPinned) {
-                metaPanel.classList.remove('show');
+                setPerfVisible(false);
             }
         });
 
@@ -561,8 +859,6 @@
         document.addEventListener('click', function(e) {
             if (!colorPicker.contains(e.target) && e.target !== btnBg && !btnBg.contains(e.target))
                 colorPicker.classList.remove('show');
-            if (!metaPinned && !metaPanel.contains(e.target) && e.target !== btnMeta && !btnMeta.contains(e.target))
-                metaPanel.classList.remove('show');
         });
 
         if (bgIndex < 0) { bgLayer.className = ''; bgLayer.style.background = customBgColor; }
@@ -573,18 +869,15 @@
             controls.classList.remove('hidden');
             topBar.classList.remove('hidden');
             infoEl.classList.add('show');
-            if (perfVisible) perfOverlay.classList.remove('hidden');
             resetHideTimer();
         }
         function hideControls() {
-            if (isDragging || perfDrag.active) return;
+            if (isDragging || perfDrag.active || metaPinned || structVisible) return;
             controls.classList.add('hidden');
             topBar.classList.add('hidden');
             infoEl.classList.remove('show');
             volumeLayer.classList.remove('show');
             colorPicker.classList.remove('show');
-            metaPanel.classList.remove('show');
-            perfOverlay.classList.add('hidden');
         }
         function resetHideTimer() {
             if (hideTimer) clearTimeout(hideTimer);
@@ -649,7 +942,7 @@
         var zoomHideTimer = null;
         var panX = 0, panY = 0;
         var isPanning = false;
-        var panStartX = 0, panStartY = 0;
+        var panStartX = 0, panStartY = 0, panMoved = false;
 
         function applyTransform() {
             canvasWrap.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomLevel + ')';
@@ -672,6 +965,7 @@
         canvas.addEventListener('mousedown', function(e) {
             if (e.button === 0) {
                 isPanning = true;
+                panMoved = false;
                 panStartX = e.clientX - panX;
                 panStartY = e.clientY - panY;
                 canvas.style.cursor = 'grabbing';
@@ -680,13 +974,20 @@
         });
         document.addEventListener('mousemove', function(e) {
             if (isPanning) {
-                panX = e.clientX - panStartX;
-                panY = e.clientY - panStartY;
+                var nx = e.clientX - panStartX;
+                var ny = e.clientY - panStartY;
+                if (Math.abs(nx - panX) > 3 || Math.abs(ny - panY) > 3) panMoved = true;
+                panX = nx;
+                panY = ny;
                 applyTransform();
             }
         });
-        document.addEventListener('mouseup', function() {
-            if (isPanning) { isPanning = false; canvas.style.cursor = ''; }
+        document.addEventListener('mouseup', function(e) {
+            if (isPanning) {
+                isPanning = false;
+                canvas.style.cursor = '';
+                if (!panMoved && e.target === canvas) inspectCanvasPoint(e);
+            }
         });
 
         // --- Window drag (click on background area) ---
@@ -736,9 +1037,20 @@
                     fps: typeof pagFile.frameRate === 'function' ? pagFile.frameRate() : 30,
                     numLayers: typeof pagFile.numChildren === 'function' ? pagFile.numChildren() : null,
                     numImages: typeof pagFile.numImages === 'function' ? pagFile.numImages() : null,
-                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : null
+                    numTexts: typeof pagFile.numTexts === 'function' ? pagFile.numTexts() : null,
+                    numVideos: typeof pagFile.numVideos === 'function' ? pagFile.numVideos() : null,
+                    tagLevel: typeof pagFile.tagLevel === 'function' ? pagFile.tagLevel() : null,
+                    timeStretchMode: typeof pagFile.timeStretchMode === 'function' ? pagFile.timeStretchMode() : null,
+                    maxTagLevel: (typeof pag.PAGFile !== 'undefined' && typeof pag.PAGFile.maxSupportedTagLevel === 'function') ? pag.PAGFile.maxSupportedTagLevel() : null,
+                    fileSize: fileSize
                 };
+                totalFrames = Math.round(duration / 1000000 * pagMeta.fps);
+                infoEl.innerHTML = pagWidth + '\u00d7' + pagHeight + ' (' + totalFrames + 'f)<br><span id="fpsDisplay">0 FPS</span>';
                 log('Meta: ' + JSON.stringify(pagMeta));
+                perfHistory = [];
+                selectedLayer = null;
+                refreshStructureTree();
+                renderInspector(null);
 
                 // Force preserveDrawingBuffer and alpha for frame capture
                 var origGetContext = canvas.getContext.bind(canvas);
@@ -791,7 +1103,8 @@
             var pct = (p * 100).toFixed(2) + '%';
             progressFill.style.width = 'calc(' + pct + ' - 10px)';
             progressThumb.style.left = 'calc(' + pct + ')';
-            timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration);
+            var currentFrame = Math.round(p * totalFrames);
+            timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration) + '  ' + currentFrame + '/' + totalFrames;
         }
 
         function updatePlayBtn() {
@@ -828,11 +1141,243 @@
             if (pagView) pagView.setRepeatCount(isLooping ? 0 : 1);
         });
 
+        // --- Frame stepping ---
+        function stepFrame(delta) {
+            if (!pagView || !pagFile || totalFrames <= 0) return;
+            if (isPlaying) { pagView.pause(); isPlaying = false; updatePlayBtn(); }
+            var currentFrame = Math.round(pagView.getProgress() * totalFrames);
+            var nextFrame = Math.max(0, Math.min(totalFrames - 1, currentFrame + delta));
+            var newProgress = nextFrame / totalFrames;
+            pagView.setProgress(newProgress);
+            if (typeof pagView.flush === 'function') pagView.flush();
+            updateProgress(newProgress);
+        }
+
+        btnPrevFrame.addEventListener('click', function() { stepFrame(-1); });
+        btnNextFrame.addEventListener('click', function() { stepFrame(1); });
+
+        // --- File Structure & Layer Inspector (independent side drawer) ---
+        var structVisible = false;
+        var selectedLayer = null;
+        var layerNodeMap = [];
+
+        function toggleStruct(forceOpen) {
+            structVisible = typeof forceOpen === 'boolean' ? forceOpen : !structVisible;
+            if (btnStruct) btnStruct.classList.toggle('pinned', structVisible);
+            if (structPanel) structPanel.classList.toggle('show', structVisible);
+        }
+        if (btnStruct) btnStruct.addEventListener('click', function(e) { e.stopPropagation(); toggleStruct(); });
+
+        document.querySelectorAll('.struct-tab').forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.querySelectorAll('.struct-tab').forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                var name = tab.dataset.tab;
+                if (structBody) structBody.style.display = name === 'tree' ? 'block' : 'none';
+                if (inspectorBody) inspectorBody.style.display = name === 'inspector' ? 'block' : 'none';
+            });
+        });
+
+        function switchStructTab(tabName) {
+            var target = document.querySelector('.struct-tab[data-tab="' + tabName + '"]');
+            if (target) target.click();
+        }
+
+        function getLayerRawType(layer) {
+            return layer && typeof layer.layerType === 'function' ? layer.layerType() : 0;
+        }
+
+        function getLayerTypeName(layer) {
+            if (!layer || typeof layer.layerType !== 'function') return T('LAYER_Unknown');
+            var t = layer.layerType();
+            var keys = ['LAYER_Unknown', 'LAYER_Null', 'LAYER_Solid', 'LAYER_Text', 'LAYER_Shape', 'LAYER_Image', 'LAYER_PreCompose', 'LAYER_Camera'];
+            return keys[t] ? T(keys[t]) : (T('LAYER_Unknown') + '#' + t);
+        }
+
+        function safeVal(obj, fn) {
+            try { return obj && typeof obj[fn] === 'function' ? obj[fn]() : null; }
+            catch (e) { return null; }
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function buildLayerHtml(layer, depth) {
+            var name = safeVal(layer, 'layerName') || T('INSP_Unnamed');
+            var typeName = getLayerTypeName(layer);
+            var nChildren = safeVal(layer, 'numChildren') || 0;
+            var editableIdx = safeVal(layer, 'editableIndex');
+            var id = layerNodeMap.length;
+            layerNodeMap.push(layer);
+
+            var badge = typeName + (editableIdx != null && editableIdx >= 0 ? ' #' + editableIdx : '');
+            var toggleChar = nChildren > 0 ? '&#x25BE;' : '&#x2022;';
+            var html = '<div class="tree-node" data-node-id="' + id + '">';
+            html += '<div class="tree-row" data-node-id="' + id + '">';
+            html += '<span class="tree-toggle">' + toggleChar + '</span>';
+            html += '<span class="tree-badge">' + escapeHtml(badge) + '</span>';
+            html += '<span class="tree-label" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</span>';
+            html += '</div>';
+
+            if (nChildren > 0) {
+                html += '<div class="tree-children">';
+                for (var i = 0; i < nChildren; i++) {
+                    var child = layer.getLayerAt(i);
+                    if (child) html += buildLayerHtml(child, depth + 1);
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function refreshStructureTree() {
+            if (!structBody || !pagFile) return;
+            layerNodeMap = [];
+            var sm = safeVal(pagFile, 'timeStretchMode');
+            var html = '<div class="tree-node">';
+            html += '<div class="tree-row"><span class="tree-toggle">&#x25BE;</span><span class="tree-badge">' + escapeHtml(T('TREE_File')) + '</span><span class="tree-label">' + escapeHtml(T('TREE_Root')) + '</span></div>';
+            html += '<div class="tree-children">';
+            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_TimeStretch')) + '</span><span>' + escapeHtml(getStretchModeText(sm)) + '</span></div>';
+            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_Duration')) + '</span><span>' + totalFrames + 'f (' + (duration / 1000000).toFixed(2) + 's)</span></div>';
+            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_FPS')) + '</span><span>' + (pagMeta ? pagMeta.fps : '-') + '</span></div>';
+            html += '<div class="tree-prop"><span>' + escapeHtml(T('TREE_Size')) + '</span><span>' + pagWidth + ' × ' + pagHeight + '</span></div>';
+            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_TagLevel')) + '</span><span>' + (pagMeta && pagMeta.tagLevel != null ? pagMeta.tagLevel : '-') + '</span></div>';
+            html += '<div class="tree-prop"><span>' + escapeHtml(T('TREE_VideosLayers')) + '</span><span>' + (pagMeta && pagMeta.numVideos != null ? pagMeta.numVideos : '-') + ' / ' + (pagMeta && pagMeta.numLayers != null ? pagMeta.numLayers : '-') + '</span></div>';
+            var n = safeVal(pagFile, 'numChildren') || 0;
+            for (var i = 0; i < n; i++) {
+                var child = pagFile.getLayerAt(i);
+                if (child) html += buildLayerHtml(child, 0);
+            }
+            html += '</div></div>';
+            structBody.innerHTML = html;
+
+            structBody.querySelectorAll('.tree-row[data-node-id]').forEach(function(row) {
+                row.addEventListener('click', function(e) {
+                    var id = parseInt(row.dataset.nodeId, 10);
+                    var node = row.parentElement;
+                    var childrenEl = node.querySelector(':scope > .tree-children');
+                    if (e.target.classList.contains('tree-toggle') && childrenEl) {
+                        var collapsed = childrenEl.classList.toggle('collapsed');
+                        e.target.innerHTML = collapsed ? '&#x25B8;' : '&#x25BE;';
+                        return;
+                    }
+                    structBody.querySelectorAll('.tree-row.selected').forEach(function(r) { r.classList.remove('selected'); });
+                    row.classList.add('selected');
+                    selectedLayer = layerNodeMap[id] || null;
+                    renderInspector(selectedLayer);
+                });
+            });
+        }
+
+        function renderInspector(layer) {
+            if (!inspectorBody) return;
+            if (!layer) {
+                inspectorBody.innerHTML = '<div class="insp-empty">' + T('INSP_Empty') + '</div>';
+                return;
+            }
+            var rawType = getLayerRawType(layer);
+            var typeName = getLayerTypeName(layer);
+            var name = safeVal(layer, 'layerName') || T('INSP_Unnamed');
+            var st = safeVal(layer, 'startTime');
+            var dur = safeVal(layer, 'duration');
+            var alpha = safeVal(layer, 'alpha');
+            var visible = safeVal(layer, 'visible');
+            var editableIdx = safeVal(layer, 'editableIndex');
+            var visibleText = visible === true ? T('BOOL_True') : (visible === false ? T('BOOL_False') : '-');
+
+            var html = ''
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Name')) + '</span><span class="v" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</span></div>'
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Type')) + '</span><span class="v">' + escapeHtml(typeName) + '</span></div>'
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_StartTime')) + '</span><span class="v">' + (st != null ? (st / 1000000).toFixed(2) + 's' : '-') + '</span></div>'
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Duration')) + '</span><span class="v">' + (dur != null ? (dur / 1000000).toFixed(2) + 's' : '-') + '</span></div>'
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Alpha')) + '</span><span class="v">' + (alpha != null ? alpha.toFixed(2) : '-') + '</span></div>'
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Visible')) + '</span><span class="v">' + escapeHtml(visibleText) + '</span></div>'
+                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_EditableIndex')) + '</span><span class="v">' + (editableIdx != null ? editableIdx : '-') + '</span></div>';
+
+            if (rawType === 3 && editableIdx != null && editableIdx >= 0 && pagFile) {
+                var textDoc = null;
+                try { textDoc = pagFile.getTextData(editableIdx); } catch (e) {}
+                var curText = textDoc && textDoc.text ? textDoc.text : '';
+                html += '<div class="insp-edit"><input type="text" id="inspTextInput" value="' + escapeHtml(curText) + '">'
+                    + '<button class="insp-btn" id="btnApplyText">' + T('INSP_ApplyText') + '</button></div>';
+            } else if (rawType === 5 && editableIdx != null && editableIdx >= 0 && pagFile) {
+                html += '<div class="insp-edit"><input type="file" id="inspImgInput" accept="image/*" style="display:none">'
+                    + '<button class="insp-btn" id="btnReplaceImg">' + T('INSP_ReplaceImage') + '</button></div>';
+            }
+
+            inspectorBody.innerHTML = html;
+
+            var btnApplyText = document.getElementById('btnApplyText');
+            if (btnApplyText) {
+                btnApplyText.addEventListener('click', function() {
+                    var val = document.getElementById('inspTextInput').value;
+                    try {
+                        var td = pagFile.getTextData(editableIdx);
+                        td.text = val;
+                        pagFile.replaceText(editableIdx, td);
+                        if (typeof pagView.flush === 'function') pagView.flush();
+                        showToast(T('TOAST_TextUpdated'));
+                    } catch (err) { log('replaceText failed: ' + err.message); }
+                });
+            }
+
+            var btnReplaceImg = document.getElementById('btnReplaceImg');
+            var inspImgInput = document.getElementById('inspImgInput');
+            if (btnReplaceImg && inspImgInput) {
+                btnReplaceImg.addEventListener('click', function() { inspImgInput.click(); });
+                inspImgInput.addEventListener('change', function() {
+                    var file = inspImgInput.files && inspImgInput.files[0];
+                    if (!file) return;
+                    var img = new Image();
+                    img.onload = async function() {
+                        try {
+                            var pagImg = await pag.PAGImage.fromSource(img);
+                            pagFile.replaceImage(editableIdx, pagImg);
+                            if (typeof pagView.flush === 'function') pagView.flush();
+                            showToast(T('TOAST_ImageUpdated'));
+                        } catch (err) { log('replaceImage failed: ' + err.message); }
+                    };
+                    img.src = URL.createObjectURL(file);
+                });
+            }
+        }
+
+        function inspectCanvasPoint(e) {
+            if (!pagView || typeof pagView.getLayersUnderPoint !== 'function') return;
+            var rect = canvas.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) return;
+            var x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            var y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            try {
+                var layers = pagView.getLayersUnderPoint(x, y);
+                if (layers && layers.length > 0) {
+                    var topLayer = layers[0];
+                    selectedLayer = topLayer;
+                    renderInspector(topLayer);
+                    if (structVisible) switchStructTab('inspector');
+                    else showToast((safeVal(topLayer, 'layerName') || T('INSP_Unnamed')) + ' (' + getLayerTypeName(topLayer) + ')');
+                }
+            } catch (err) {}
+        }
+
+        // --- Keyboard shortcuts ---
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowLeft') { e.preventDefault(); stepFrame(-1); showControls(); }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); stepFrame(1); showControls(); }
+            else if (e.key === ' ') { e.preventDefault(); btnPlay.click(); showControls(); }
+            else if (e.key === 'l' || e.key === 'L') { e.preventDefault(); toggleMetaPanel(); showControls(); }
+            else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleStruct(); showControls(); }
+        });
+
         // --- Messages from C# ---
         window.addEventListener('message', function(e) {
             var msg = e.data;
             if (!msg || typeof msg !== 'object') return;
-            if (msg.type === 'loadFile') loadFile(msg.base64, msg.libpagSrc, msg.wasmSrc);
+            if (msg.type === 'loadFile') { fileSize = msg.fileSize || 0; loadFile(msg.base64, msg.libpagSrc, msg.wasmSrc); }
         });
 
         log('Page ready');
