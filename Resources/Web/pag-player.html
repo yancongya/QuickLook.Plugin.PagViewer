@@ -7,7 +7,7 @@
             --bg: #202020;
             --fg: #cccccc;
             --fg-alt: #888888;
-            --accent: #76b9ed;
+            --accent: #e0e0e0;
             --control-bg: rgba(30,30,30,0.92);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,7 +71,7 @@
         #topBar {
             position: absolute; top: 8px; right: 8px;
             display: flex; gap: 4px;
-            z-index: 20; opacity: 1; transition: opacity 0.3s;
+            z-index: 25; opacity: 1; transition: opacity 0.3s;
         }
         #topBar.hidden { opacity: 0; pointer-events: none; }
         #topBar .btn {
@@ -108,7 +108,7 @@
             position: absolute; bottom: 0; left: 0; right: 0;
             height: 32px; background: var(--control-bg);
             display: flex; align-items: center; padding: 0 8px;
-            opacity: 1; transition: opacity 0.3s ease; z-index: 10;
+            opacity: 1; transition: opacity 0.3s ease; z-index: 25;
         }
         #controls.hidden { opacity: 0; pointer-events: none; }
 
@@ -123,7 +123,7 @@
         .btn:active { background: rgba(255,255,255,0.15); }
         .btn.active { color: var(--accent); }
         .btn.pinned {
-            background: rgba(118,185,237,0.3);
+            background: rgba(255,255,255,0.18);
             color: var(--accent);
             box-shadow: inset 0 -2px 0 var(--accent);
         }
@@ -156,6 +156,37 @@
         #progressWrap.dragging #progressThumb { opacity: 1; background: var(--fg); }
         #progressWrap:hover #progressFill { height: 2px; }
         #progressWrap:hover #progressBg { height: 2px; }
+        #progressMarkers {
+            position: absolute; left: 10px; right: 10px; top: 0; bottom: 0;
+            pointer-events: none; z-index: 1;
+        }
+        .prog-marker {
+            position: absolute; top: 50%; width: 5px; height: 5px;
+            background: #ffca28; transform: translate(-50%, -50%) rotate(45deg);
+            pointer-events: auto; cursor: pointer; opacity: 0.85;
+            box-shadow: 0 0 3px rgba(0,0,0,0.8);
+        }
+        .prog-marker:hover { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1.3); }
+
+        /* Debug & render options popup */
+        #optsMenu {
+            position: absolute; top: 36px; right: 8px; width: 224px;
+            background: var(--control-bg); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px; padding: 8px 10px; color: var(--fg); font-size: 11px;
+            display: none; flex-direction: column; gap: 7px; z-index: 22;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+        #optsMenu.show { display: flex; }
+        .opt-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .opt-row label { color: var(--fg-alt); font-size: 10px; white-space: nowrap; }
+        .opt-pills { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+        .opt-pill {
+            padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15);
+            background: transparent; color: var(--fg-alt); font-size: 10px; cursor: pointer;
+        }
+        .opt-pill:hover { color: var(--fg); border-color: rgba(255,255,255,0.3); }
+        .opt-pill.active { background: rgba(255,255,255,0.16); color: var(--accent); border-color: var(--accent); }
+        .opt-chk { accent-color: var(--accent); cursor: pointer; }
 
         #time {
             color: var(--fg); font-size: 11px;
@@ -171,7 +202,7 @@
             background: var(--control-bg);
             display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.15s; z-index: 11;
+            transition: opacity 0.15s; z-index: 26;
         }
         #volumeLayer.show { opacity: 1; pointer-events: auto; }
         #volumeSlider {
@@ -191,21 +222,6 @@
             color: var(--fg-alt); font-size: 13px; z-index: 1;
         }
 
-        #info {
-            position: absolute; top: 8px; left: 8px;
-            color: var(--fg-alt); font-size: 11px;
-            font-family: 'Segoe UI', sans-serif;
-            pointer-events: none; opacity: 0;
-            transition: opacity 0.3s; z-index: 2;
-            line-height: 1.4;
-        }
-        #info.show { opacity: 1; }
-        #fpsDisplay {
-            font-family: 'Consolas', monospace;
-            font-weight: bold;
-            font-size: 11px;
-        }
-
         /* Toast notification */
         #toast {
             position: absolute; bottom: 44px; left: 50%;
@@ -217,124 +233,206 @@
         }
         #toast.show { opacity: 1; }
 
-        /* Unified Info & Performance overlay (bottom-right, transparent with text shadow) */
+        /* Unified Info & Performance overlay (bottom-right, transparent panel, resizable from top-left) */
         #perfOverlay {
-            position: absolute; bottom: 40px; right: 10px;
-            width: 248px; background: transparent;
-            border: none; box-shadow: none; padding: 6px 8px;
+            position: absolute; bottom: 42px; right: 10px;
+            width: 256px; min-width: 216px; max-width: 420px;
+            min-height: 168px; max-height: calc(100% - 82px);
+            background: rgba(16, 16, 16, 0.16);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px; padding: 8px 10px;
             color: #f4f4f4; font-size: 10px;
             font-family: 'Segoe UI', sans-serif;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.85), 0 0 2px rgba(0,0,0,0.95);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.85);
             z-index: 18; display: none;
+            flex-direction: column; overflow: hidden;
+            transition: background 0.18s ease;
         }
-        #perfOverlay.show { display: block; }
+        #perfOverlay:hover { background: rgba(16, 16, 16, 0.44); }
+        #perfOverlay.show { display: flex; }
+        #perfDot {
+            display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+            background: #66bb6a; margin-right: 5px; vertical-align: middle;
+            box-shadow: 0 0 4px rgba(102,187,106,0.7);
+        }
+        #btnCopyPerf {
+            background: transparent; border: none; color: rgba(255,255,255,0.55);
+            cursor: pointer; font-size: 10px; padding: 1px 3px; border-radius: 3px;
+            font-family: 'Segoe MDL2 Assets', 'Segoe Fluent Icons';
+        }
+        #btnCopyPerf:hover { color: #ffffff; background: rgba(255,255,255,0.12); }
+        #perfResizeHandle {
+            position: absolute; top: 0; left: 0;
+            width: 12px; height: 12px; cursor: nwse-resize;
+            z-index: 3; opacity: 0.45; transition: opacity 0.15s;
+        }
+        #perfResizeHandle::before {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 6px; height: 6px;
+            border-top: 2px solid rgba(255,255,255,0.75);
+            border-left: 2px solid rgba(255,255,255,0.75);
+            border-top-left-radius: 1px;
+        }
+        #perfResizeL {
+            position: absolute; top: 12px; left: 0; bottom: 0; width: 6px;
+            cursor: ew-resize; z-index: 2;
+        }
+        #perfResizeT {
+            position: absolute; top: 0; left: 12px; right: 28px; height: 6px;
+            cursor: ns-resize; z-index: 2;
+        }
+        #perfOverlay:hover #perfResizeHandle { opacity: 1; }
         #perfHeader {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 5px; cursor: move; color: #d8d8d8;
-            font-size: 10px; font-weight: 600;
+            margin-bottom: 5px; cursor: grab; color: #d8d8d8;
+            font-size: 10px; font-weight: 600; flex-shrink: 0;
+            padding-left: 6px; gap: 6px;
         }
+        #perfHeader:active { cursor: grabbing; }
+        #perfDragGrip {
+            font-size: 11px; color: rgba(255,255,255,0.45);
+            letter-spacing: -1px; cursor: grab; transition: color 0.15s;
+        }
+        #perfHeader:hover #perfDragGrip { color: #ffffff; }
         #perfMetaGrid {
             display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 4px 6px; margin-bottom: 6px;
-            padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.18);
+            gap: 4px 8px; margin-bottom: 6px;
+            padding: 2px 2px 6px 2px; border-bottom: 1px solid rgba(255,255,255,0.18);
+            flex-shrink: 0;
         }
         .pm-cell { display: flex; flex-direction: column; min-width: 0; }
-        .pm-k { font-size: 9px; color: #cccccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pm-v { font-size: 11px; font-weight: 600; color: #ffffff; font-family: 'Consolas', 'Segoe UI', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pm-k { font-size: 9px; color: #cccccc; white-space: nowrap; }
+        .pm-v { font-size: 11px; font-weight: 600; color: #ffffff; font-family: 'Consolas', 'Segoe UI', monospace; white-space: nowrap; }
         .pm-sub {
             grid-column: 1 / -1; display: flex; justify-content: space-between;
             font-size: 9px; color: #dcdcdc; padding-top: 2px;
         }
         #perfChart {
-            width: 100%; height: 48px; display: block;
+            width: 100%; flex: 1; min-height: 28px; display: block;
             background: transparent; border-radius: 2px;
             margin-bottom: 4px;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9));
         }
         .perf-row {
             display: grid; grid-template-columns: 42px 1fr 1fr 1fr;
-            gap: 2px; line-height: 1.45;
+            gap: 2px; line-height: 1.45; flex-shrink: 0;
             font-family: 'Consolas', 'Segoe UI', monospace;
         }
         .perf-row .p-name { color: #d0d0d0; font-family: 'Segoe UI', sans-serif; }
         .perf-row .p-val { text-align: right; color: #ffffff; }
 
-        /* File structure & Layer inspector side drawer (independent) */
+        /* File structure single panel (independent, sortable, resizable, inline edit) */
         #structPanel {
-            position: absolute; top: 36px; right: 8px; bottom: 40px;
-            width: 270px; background: var(--control-bg);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 4px; color: var(--fg); font-size: 11px;
+            position: absolute; top: 36px; right: 8px; bottom: 42px;
+            width: 336px; min-width: 260px; max-width: 520px;
+            background: var(--control-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px; color: var(--fg); font-size: 11px;
             z-index: 21; display: none; flex-direction: column;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.45);
         }
         #structPanel.show { display: flex; }
-
-        .struct-tabs {
-            display: flex; border-bottom: 1px solid rgba(255,255,255,0.1);
+        #structResizeL {
+            position: absolute; top: 0; left: 0; bottom: 0; width: 6px;
+            cursor: ew-resize; z-index: 3;
+        }
+        #structResizeL:hover { background: rgba(255,255,255,0.18); border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+        .struct-top {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0; font-weight: 600;
+        }
+        #structTitle { flex-shrink: 0; font-size: 12px; }
+        #structSearch {
+            flex: 1; min-width: 0; padding: 3px 8px;
+            background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 4px; color: var(--fg); font-size: 11px; outline: none;
+        }
+        #structSearch:focus { border-color: var(--accent); }
+        #btnStructClose {
+            width: 20px; height: 20px; border: none; background: transparent;
+            color: var(--fg-alt); cursor: pointer; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
             flex-shrink: 0;
         }
-        .struct-tab {
-            flex: 1; padding: 6px 6px; text-align: center;
-            background: transparent; border: none; color: var(--fg-alt);
-            cursor: pointer; font-size: 11px; transition: all 0.15s;
-            border-bottom: 2px solid transparent; white-space: nowrap;
+        #btnStructClose:hover { background: rgba(255,255,255,0.1); color: var(--fg); }
+        .struct-header {
+            display: grid; grid-template-columns: 1fr 58px 54px 68px;
+            gap: 6px; padding: 6px 12px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 10px; color: var(--fg-alt); flex-shrink: 0;
         }
-        .struct-tab.active {
-            color: var(--accent); border-bottom-color: var(--accent);
-            background: rgba(118,185,237,0.08);
+        .struct-col {
+            cursor: pointer; user-select: none; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
         }
+        .struct-col:hover { color: var(--fg); }
+        .struct-col.num { text-align: right; }
+        .struct-col.sorted { color: var(--accent); }
         .struct-body {
-            flex: 1; overflow-y: auto; padding: 8px 10px;
+            flex: 1; overflow-y: auto; padding: 4px 6px;
         }
         .struct-body::-webkit-scrollbar { width: 4px; }
         .struct-body::-webkit-scrollbar-track { background: transparent; }
         .struct-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-        .tree-node { user-select: text; }
-        .tree-row {
+        .p-row {
+            display: grid; grid-template-columns: 1fr 58px 54px 68px;
+            gap: 6px; align-items: center; min-height: 26px; padding: 3px 6px;
+            border-radius: 5px; cursor: pointer; margin-bottom: 1px;
+            transition: background 0.12s;
+        }
+        .p-row:hover { background: rgba(255,255,255,0.07); }
+        .p-row.selected { background: rgba(255,255,255,0.16); color: #fff; }
+        .p-name {
             display: flex; align-items: center; gap: 4px;
-            padding: 2px 4px; border-radius: 2px; cursor: pointer;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
         }
-        .tree-row:hover { background: rgba(255,255,255,0.08); }
-        .tree-row.selected { background: rgba(118,185,237,0.25); color: #fff; }
-        .tree-toggle {
-            width: 12px; text-align: center; font-size: 9px;
-            color: var(--fg-alt); flex-shrink: 0;
+        .p-guide { color: rgba(255,255,255,0.22); font-size: 10px; flex-shrink: 0; }
+        .p-name-txt { overflow: hidden; text-overflow: ellipsis; }
+        .p-type {
+            font-size: 9px; padding: 2px 5px; border-radius: 4px;
+            background: rgba(255,255,255,0.08); color: #b8c4d0;
+            text-align: center; white-space: nowrap; font-weight: 500;
         }
-        .tree-badge {
-            font-size: 9px; padding: 0 4px; border-radius: 2px;
-            background: rgba(255,255,255,0.1); color: var(--accent);
-            flex-shrink: 0;
+        .p-type.t-pre { background: rgba(118,185,237,0.14); color: #e0e0e0; }
+        .p-type.t-img { background: rgba(78,201,176,0.14); color: #4ec9b0; }
+        .p-type.t-txt { background: rgba(220,170,80,0.16); color: #e5b567; }
+        .p-type.t-shp { background: rgba(160,174,192,0.14); color: #a0aec0; }
+        .p-type.t-sld { background: rgba(180,142,173,0.15); color: #c792ea; }
+        .p-type.t-nul { background: rgba(140,140,140,0.12); color: #999999; }
+        .p-num {
+            text-align: right; font-family: 'Consolas', monospace;
+            font-size: 10px; color: var(--fg-alt); white-space: nowrap;
         }
-        .tree-label { overflow: hidden; text-overflow: ellipsis; flex: 1; }
-        .tree-prop {
-            display: flex; justify-content: space-between;
-            padding: 1px 4px 1px 18px; color: var(--fg-alt); font-size: 10px;
+        .p-inline-edit {
+            padding: 6px 8px; margin: 2px 2px 4px 2px;
+            background: rgba(0,0,0,0.25); border-radius: 5px;
+            border-left: 2px solid var(--accent);
+            display: flex; gap: 6px; align-items: center;
         }
-        .tree-prop span:last-child { color: var(--fg); }
-        .tree-children { padding-left: 12px; }
-        .tree-children.collapsed { display: none; }
-        .insp-empty { color: var(--fg-alt); padding: 12px 4px; text-align: center; line-height: 1.5; }
-        .insp-row {
-            display: flex; justify-content: space-between; padding: 3px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+        .p-inline-edit input[type="text"] {
+            flex: 1; padding: 3px 6px; background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 4px;
+            color: var(--fg); font-size: 11px; outline: none; min-width: 0;
         }
-        .insp-row .k { color: var(--fg-alt); }
-        .insp-row .v { color: var(--fg); text-align: right; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
-        .insp-edit { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-        .insp-edit input[type="text"] {
-            width: 100%; padding: 4px 6px; background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.18); border-radius: 3px;
-            color: var(--fg); font-size: 11px; outline: none;
-        }
-        .insp-edit input[type="text"]:focus { border-color: var(--accent); }
+        .p-inline-edit input[type="text"]:focus { border-color: var(--accent); }
         .insp-btn {
-            padding: 4px 8px; background: rgba(118,185,237,0.2);
-            border: 1px solid var(--accent); border-radius: 3px;
-            color: var(--accent); cursor: pointer; font-size: 11px;
+            padding: 3px 8px; background: rgba(255,255,255,0.16);
+            border: 1px solid var(--accent); border-radius: 4px;
+            color: var(--accent); cursor: pointer; font-size: 10px; white-space: nowrap;
         }
-        .insp-btn:hover { background: rgba(118,185,237,0.35); }
+        .insp-btn:hover { background: rgba(255,255,255,0.24); }
+        .struct-footer {
+            padding: 6px 10px; border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 10px; color: var(--fg-alt); flex-shrink: 0;
+            display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+        }
+        .sf-tag {
+            padding: 1px 6px; border-radius: 3px;
+            background: rgba(255,255,255,0.07); color: var(--fg);
+            font-size: 10px; white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -344,7 +442,6 @@
             <canvas id="pagCanvas"></canvas>
         </div>
         <div id="zoomInfo"></div>
-        <div id="info"></div>
         <div id="toast"></div>
 
         <!-- Top-right toolbar -->
@@ -365,19 +462,46 @@
             <button class="btn" id="btnBg" title="切换背景">
                 <span class="icon">&#xEF1F;</span>
             </button>
+            <!-- \xE713 = Render & Debug Options -->
+            <button class="btn" id="btnOpts" title="渲染与调试选项">
+                <span class="icon">&#xE713;</span>
+            </button>
+        </div>
+        <div id="optsMenu">
+            <div class="opt-row"><label id="lblOptCache">位图缓存</label><input type="checkbox" id="chkCache" class="opt-chk" checked></div>
+            <div class="opt-row"><label id="lblOptVideo">视频图层</label><input type="checkbox" id="chkVideo" class="opt-chk" checked></div>
+            <div class="opt-row"><label id="lblOptCacheScale">缓存倍率</label><div class="opt-pills" id="grpCacheScale"><button class="opt-pill" data-val="0.5">0.5x</button><button class="opt-pill active" data-val="1">1.0x</button></div></div>
+            <div class="opt-row"><label id="lblOptMaxFps">帧率上限</label><div class="opt-pills" id="grpMaxFps"><button class="opt-pill active" data-val="0" id="optUnlim">不限</button><button class="opt-pill" data-val="24">24</button><button class="opt-pill" data-val="30">30</button><button class="opt-pill" data-val="60">60</button></div></div>
+            <div class="opt-row"><label id="lblOptSpeed">播放倍速</label><div class="opt-pills" id="grpSpeed"><button class="opt-pill" data-val="0.5">0.5x</button><button class="opt-pill active" data-val="1">1x</button><button class="opt-pill" data-val="1.5">1.5x</button><button class="opt-pill" data-val="2">2x</button></div></div>
+            <div class="opt-row"><label id="lblOptScaleMode">填充模式</label><div class="opt-pills" id="grpScaleMode"><button class="opt-pill active" data-val="0" id="optSmNone">原始</button><button class="opt-pill" data-val="2" id="optSmFit">适应</button><button class="opt-pill" data-val="3" id="optSmZoom">裁剪</button><button class="opt-pill" data-val="1" id="optSmFill">拉伸</button></div></div>
+            <div class="opt-row"><label id="lblOptStretch">时间伸缩</label><div class="opt-pills" id="grpStretch"><button class="opt-pill" data-val="0" id="optTsNone">不伸缩</button><button class="opt-pill" data-val="1" id="optTsScale">缩放</button><button class="opt-pill active" data-val="2" id="optTsRepeat">循环</button></div></div>
+            <div class="opt-row"><button class="insp-btn" id="btnFreeCache" style="width:100%">释放缓存</button></div>
         </div>
         <div id="structPanel">
-            <div class="struct-tabs">
-                <button class="struct-tab active" data-tab="tree" id="tabTree">文件结构</button>
-                <button class="struct-tab" data-tab="inspector" id="tabInspector">图层详情</button>
+            <div id="structResizeL"></div>
+            <div class="struct-top">
+                <span id="structTitle">文件结构</span>
+                <input type="text" id="structSearch" placeholder="搜索图层...">
+                <button id="btnStructClose" title="关闭">&#x2715;</button>
+            </div>
+            <div class="struct-header" id="structHeader">
+                <div class="struct-col" data-sort="name" id="colName">名称</div>
+                <div class="struct-col" data-sort="type" id="colType">类型</div>
+                <div class="struct-col num" data-sort="dur" id="colDur">时长</div>
+                <div class="struct-col num" data-sort="size" id="colSize">尺寸 / 索引</div>
             </div>
             <div class="struct-body" id="structBody"></div>
-            <div class="struct-body" id="inspectorBody" style="display:none;"></div>
+            <div class="struct-footer" id="structFooter">提示：点击表头可排序，双击可编辑图层可修改</div>
         </div>
         <div id="perfOverlay">
+            <div id="perfResizeHandle"></div>
+            <div id="perfResizeL"></div>
+            <div id="perfResizeT"></div>
             <div id="perfHeader">
-                <span id="perfTitle">文件信息与性能</span>
+                <span><span id="perfDot"></span><span id="perfTitle">文件信息与性能</span></span>
                 <span id="perfFrameLabel">0 / 0</span>
+                <button id="btnCopyPerf" title="复制摘要">&#xE8C8;</button>
+                <span id="perfDragGrip">&#x22EE;&#x22EE;</span>
             </div>
             <div id="perfMetaGrid"></div>
             <canvas id="perfChart" width="232" height="48"></canvas>
@@ -410,6 +534,7 @@
             <div id="progressWrap">
                 <div id="progressBg"></div>
                 <div id="progressFill"></div>
+                <div id="progressMarkers"></div>
                 <div id="progressThumb"></div>
             </div>
             <span id="time">00:00 / 00:00</span>
@@ -505,7 +630,29 @@
             'STRETCH_None': {zh:'不伸缩',en:'None'},
             'STRETCH_Scale': {zh:'缩放',en:'Scale'},
             'STRETCH_Repeat': {zh:'循环',en:'Repeat'},
-            'STRETCH_RepeatLastFrame': {zh:'定格末帧',en:'RepeatLastFrame'}
+            'STRETCH_RepeatLastFrame': {zh:'定格末帧',en:'RepeatLastFrame'},
+            'COL_Name': {zh:'名称',en:'Name'},
+            'COL_Type': {zh:'类型',en:'Type'},
+            'COL_Duration': {zh:'时长',en:'Duration'},
+            'COL_SizeOrIdx': {zh:'尺寸 / 索引',en:'Size / Idx'},
+            'STRUCT_Hint': {zh:'提示：点击表头可排序，双击可编辑图层可修改',en:'Tip: Click headers to sort, double-click editable layer'},
+            'STRUCT_Search': {zh:'搜索图层...',en:'Filter layers...'},
+            'BTN_CopyMeta': {zh:'复制摘要',en:'Copy summary'},
+            'BTN_Opts': {zh:'渲染与调试选项',en:'Render & Debug Options'},
+            'OPT_Cache': {zh:'位图缓存',en:'Bitmap Cache'},
+            'OPT_Video': {zh:'视频图层',en:'Video Layers'},
+            'OPT_CacheScale': {zh:'缓存倍率',en:'Cache Scale'},
+            'OPT_MaxFPS': {zh:'帧率上限',en:'Max FPS'},
+            'OPT_Unlimited': {zh:'不限',en:'Auto'},
+            'OPT_ScaleMode': {zh:'填充模式',en:'Scale Mode'},
+            'OPT_TimeStretch': {zh:'时间伸缩',en:'Time Stretch'},
+            'OPT_Speed': {zh:'播放倍速',en:'Speed'},
+            'OPT_FreeCache': {zh:'释放缓存',en:'Free Cache'},
+            'TOAST_CacheFreed': {zh:'缓存已释放',en:'Cache freed'},
+            'SCALE_None': {zh:'原始',en:'None'},
+            'SCALE_Fit': {zh:'适应',en:'Fit'},
+            'SCALE_Zoom': {zh:'裁剪',en:'Zoom'},
+            'SCALE_Fill': {zh:'拉伸',en:'Fill'}
         };
         var lang = (navigator.language || 'zh').startsWith('zh') ? 'zh' : 'en';
         var _t = _defaultT;
@@ -520,6 +667,9 @@
         var btnLoop = document.getElementById('btnLoop');
         var btnMute = document.getElementById('btnMute');
         var btnBg = document.getElementById('btnBg');
+        var btnOpts = document.getElementById('btnOpts');
+        var optsMenu = document.getElementById('optsMenu');
+        var progressMarkers = document.getElementById('progressMarkers');
         var btnMeta = document.getElementById('btnMeta');
         var btnSave = document.getElementById('btnSave');
         var btnStruct = document.getElementById('btnStruct');
@@ -529,12 +679,20 @@
         var perfChart = document.getElementById('perfChart');
         var perfFrameLabel = document.getElementById('perfFrameLabel');
         var perfTitle = document.getElementById('perfTitle');
+        var perfDot = document.getElementById('perfDot');
+        var btnCopyPerf = document.getElementById('btnCopyPerf');
         var pFpsLabel = document.getElementById('pFpsLabel');
         var pFlushLabel = document.getElementById('pFlushLabel');
         var structBody = document.getElementById('structBody');
-        var inspectorBody = document.getElementById('inspectorBody');
-        var tabTree = document.getElementById('tabTree');
-        var tabInspector = document.getElementById('tabInspector');
+        var structTitle = document.getElementById('structTitle');
+        var structSearch = document.getElementById('structSearch');
+        var btnStructClose = document.getElementById('btnStructClose');
+        var structResizeL = document.getElementById('structResizeL');
+        var structFooter = document.getElementById('structFooter');
+        var colName = document.getElementById('colName');
+        var colType = document.getElementById('colType');
+        var colDur = document.getElementById('colDur');
+        var colSize = document.getElementById('colSize');
         var perfMetaGrid = document.getElementById('perfMetaGrid');
         var colorPicker = document.getElementById('colorPicker');
         var customColor = document.getElementById('customColor');
@@ -545,14 +703,13 @@
         var progressFill = document.getElementById('progressFill');
         var progressThumb = document.getElementById('progressThumb');
         var timeEl = document.getElementById('time');
-        var infoEl = document.getElementById('info');
         var toastEl = document.getElementById('toast');
         var btnPrevFrame = document.getElementById('btnPrevFrame');
         var btnNextFrame = document.getElementById('btnNextFrame');
 
         var pag = null, pagFile = null, pagView = null;
         var isPlaying = false, isLooping = true, isDragging = false;
-        var duration = 0, pagWidth = 0, pagHeight = 0, totalFrames = 0;
+        var duration = 0, origDuration = 0, pagWidth = 0, pagHeight = 0, totalFrames = 0;
         var fileSize = 0;
         var hideTimer = null;
 
@@ -569,9 +726,20 @@
             if (btnPrevFrame) btnPrevFrame.title = T('BTN_PrevFrame');
             if (btnNextFrame) btnNextFrame.title = T('BTN_NextFrame');
             if (btnStruct) btnStruct.title = T('BTN_Struct');
-            if (tabTree) tabTree.textContent = T('TAB_Structure');
-            if (tabInspector) tabInspector.textContent = T('TAB_Inspector');
+            if (structTitle) structTitle.textContent = T('TAB_Structure');
+            if (structSearch) structSearch.placeholder = T('STRUCT_Search');
+            if (structFooter && !selectedLayer) structFooter.textContent = T('STRUCT_Hint');
             if (perfTitle) perfTitle.textContent = T('PERF_Title');
+            if (btnCopyPerf) btnCopyPerf.title = T('BTN_CopyMeta');
+            if (btnOpts) btnOpts.title = T('BTN_Opts');
+            var elMap = {
+                lblOptCache: 'OPT_Cache', lblOptVideo: 'OPT_Video', lblOptCacheScale: 'OPT_CacheScale',
+                lblOptMaxFps: 'OPT_MaxFPS', optUnlim: 'OPT_Unlimited', lblOptScaleMode: 'OPT_ScaleMode',
+                lblOptStretch: 'OPT_TimeStretch', lblOptSpeed: 'OPT_Speed', btnFreeCache: 'OPT_FreeCache',
+                optSmNone: 'SCALE_None', optSmFit: 'SCALE_Fit', optSmZoom: 'SCALE_Zoom', optSmFill: 'SCALE_Fill',
+                optTsNone: 'STRETCH_None', optTsScale: 'STRETCH_Scale', optTsRepeat: 'STRETCH_Repeat'
+            };
+            for (var eid in elMap) { var e = document.getElementById(eid); if (e) e.textContent = T(elMap[eid]); }
             if (pFpsLabel) pFpsLabel.textContent = T('PERF_FPS');
             if (pFlushLabel) pFlushLabel.textContent = T('PERF_Flush');
             if (pagMeta) {
@@ -607,12 +775,84 @@
         var perfHistory = [];
         var PERF_MAX_SAMPLES = 64;
         var perfDrag = { active: false, startX: 0, startY: 0, origLeft: 0, origTop: 0 };
+        var perfResize = { mode: '', startX: 0, startY: 0, origW: 0, origH: 0, rightX: 0, bottomY: 0 };
+        var perfResizeHandle = document.getElementById('perfResizeHandle');
+        var perfResizeL = document.getElementById('perfResizeL');
+        var perfResizeT = document.getElementById('perfResizeT');
+        var SAFE_TOP = 36, SAFE_BOTTOM = 42, SAFE_SIDE = 8, MIN_PERF_W = 216, MIN_PERF_H = 168;
 
         function setPerfVisible(show) {
             perfVisible = show;
             perfOverlay.classList.toggle('show', perfVisible);
-            if (perfVisible) drawPerfChart();
+            if (perfVisible) { clampPerfOverlay(); drawPerfChart(); }
         }
+
+        function clampPerfOverlay() {
+            if (!perfOverlay || !perfVisible) return;
+            var cw = document.documentElement.clientWidth;
+            var ch = document.documentElement.clientHeight;
+            var availH = Math.max(100, ch - SAFE_TOP - SAFE_BOTTOM);
+            var rect = perfOverlay.getBoundingClientRect();
+            if (rect.width === 0) return;
+            var w = Math.max(MIN_PERF_W, Math.min(rect.width, Math.max(MIN_PERF_W, cw - SAFE_SIDE * 2)));
+            var h = Math.min(Math.max(rect.height, MIN_PERF_H), availH);
+            perfOverlay.style.width = w + 'px';
+            if (perfOverlay.style.height) perfOverlay.style.height = h + 'px';
+            if (perfOverlay.style.left && perfOverlay.style.left !== 'auto') {
+                var curH = perfOverlay.getBoundingClientRect().height;
+                var l = Math.max(SAFE_SIDE, Math.min(cw - w - SAFE_SIDE, parseFloat(perfOverlay.style.left) || rect.left));
+                var t = Math.max(SAFE_TOP, Math.min(ch - curH - SAFE_BOTTOM, parseFloat(perfOverlay.style.top) || rect.top));
+                perfOverlay.style.left = l + 'px';
+                perfOverlay.style.top = t + 'px';
+            } else {
+                var curH2 = perfOverlay.getBoundingClientRect().height;
+                var r = Math.max(SAFE_SIDE, Math.min(cw - w - SAFE_SIDE, parseFloat(perfOverlay.style.right) || 10));
+                var b = Math.max(SAFE_BOTTOM, Math.min(ch - curH2 - SAFE_TOP, parseFloat(perfOverlay.style.bottom) || SAFE_BOTTOM));
+                perfOverlay.style.right = r + 'px';
+                perfOverlay.style.bottom = b + 'px';
+            }
+        }
+
+        function startPerfResize(mode, e) {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            e.preventDefault();
+            var rect = perfOverlay.getBoundingClientRect();
+            var cw = document.documentElement.clientWidth;
+            var ch = document.documentElement.clientHeight;
+            var safeBottomEdge = Math.min(rect.bottom, ch - SAFE_BOTTOM);
+            perfOverlay.style.left = 'auto';
+            perfOverlay.style.top = 'auto';
+            perfOverlay.style.right = Math.max(SAFE_SIDE, cw - rect.right) + 'px';
+            perfOverlay.style.bottom = Math.max(SAFE_BOTTOM, ch - safeBottomEdge) + 'px';
+            perfResize.mode = mode;
+            perfResize.startX = e.clientX;
+            perfResize.startY = e.clientY;
+            perfResize.origW = rect.width;
+            perfResize.origH = rect.height;
+            perfResize.rightX = rect.right;
+            perfResize.bottomY = safeBottomEdge;
+        }
+        if (perfResizeHandle) perfResizeHandle.addEventListener('mousedown', function(e) { startPerfResize('nw', e); });
+        if (perfResizeL) perfResizeL.addEventListener('mousedown', function(e) { startPerfResize('w', e); });
+        if (perfResizeT) perfResizeT.addEventListener('mousedown', function(e) { startPerfResize('n', e); });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!perfResize.mode) return;
+            var maxW = Math.min(420, perfResize.rightX - SAFE_SIDE);
+            var maxH = Math.min(340, perfResize.bottomY - SAFE_TOP);
+            if (perfResize.mode === 'nw' || perfResize.mode === 'w') {
+                var newW = Math.max(MIN_PERF_W, Math.min(maxW, perfResize.origW + (perfResize.startX - e.clientX)));
+                perfOverlay.style.width = newW + 'px';
+            }
+            if (perfResize.mode === 'nw' || perfResize.mode === 'n') {
+                var newH = Math.max(MIN_PERF_H, Math.min(maxH, perfResize.origH + (perfResize.startY - e.clientY)));
+                perfOverlay.style.height = newH + 'px';
+            }
+            drawPerfChart();
+        });
+        document.addEventListener('mouseup', function() { perfResize.mode = ''; });
+        window.addEventListener('resize', function() { clampPerfOverlay(); drawPerfChart(); });
 
         if (perfHeader) {
             perfHeader.addEventListener('mousedown', function(e) {
@@ -631,45 +871,118 @@
             });
             document.addEventListener('mousemove', function(e) {
                 if (!perfDrag.active) return;
-                perfOverlay.style.left = (perfDrag.origLeft + e.clientX - perfDrag.startX) + 'px';
-                perfOverlay.style.top = (perfDrag.origTop + e.clientY - perfDrag.startY) + 'px';
+                var cw = document.documentElement.clientWidth;
+                var ch = document.documentElement.clientHeight;
+                var rect = perfOverlay.getBoundingClientRect();
+                var w = rect.width || 256;
+                var h = rect.height || MIN_PERF_H;
+                var nx = Math.max(SAFE_SIDE, Math.min(cw - w - SAFE_SIDE, perfDrag.origLeft + e.clientX - perfDrag.startX));
+                var ny = Math.max(SAFE_TOP, Math.min(ch - h - SAFE_BOTTOM, perfDrag.origTop + e.clientY - perfDrag.startY));
+                perfOverlay.style.left = nx + 'px';
+                perfOverlay.style.top = ny + 'px';
             });
             document.addEventListener('mouseup', function() { perfDrag.active = false; });
         }
 
+        var perfHoverIdx = -1;
+        if (perfHeader) {
+            perfHeader.addEventListener('dblclick', function(e) {
+                e.stopPropagation();
+                perfOverlay.style.left = 'auto';
+                perfOverlay.style.top = 'auto';
+                perfOverlay.style.right = '10px';
+                perfOverlay.style.bottom = '42px';
+                perfOverlay.style.width = '256px';
+                perfOverlay.style.height = '';
+                clampPerfOverlay();
+                drawPerfChart();
+            });
+        }
+        if (btnCopyPerf) {
+            btnCopyPerf.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+            btnCopyPerf.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!pagMeta) return;
+                var dur = (duration / 1000000).toFixed(2) + 's';
+                var fsz = pagMeta.fileSize > 0 ? (pagMeta.fileSize >= 1048576 ? (pagMeta.fileSize / 1048576).toFixed(2) + 'MB' : (pagMeta.fileSize / 1024).toFixed(0) + 'KB') : '-';
+                var avgFps = document.getElementById('pFpsAvg').textContent;
+                var avgFlush = document.getElementById('pFlushAvg').textContent;
+                var txt = pagWidth + 'x' + pagHeight + ' | ' + (pagMeta.fps || 30) + ' FPS | ' + dur + ' | ' + fsz + ' | ' + avgFps + ' FPS / ' + avgFlush + 'ms';
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(txt).then(function() { showToast(T('TOAST_Copied')); });
+                }
+            });
+        }
+        if (perfChart) {
+            perfChart.addEventListener('mousemove', function(e) {
+                if (perfHistory.length === 0) return;
+                var rect = perfChart.getBoundingClientRect();
+                var barW = rect.width / PERF_MAX_SAMPLES;
+                var startX = rect.width - perfHistory.length * barW;
+                var idx = Math.floor((e.clientX - rect.left - startX) / barW);
+                if (idx >= 0 && idx < perfHistory.length) {
+                    perfHoverIdx = idx;
+                    var s = perfHistory[idx];
+                    perfFrameLabel.textContent = s.flush.toFixed(1) + 'ms · ' + s.fps + ' FPS';
+                    drawPerfChart();
+                } else if (perfHoverIdx !== -1) {
+                    perfHoverIdx = -1;
+                    drawPerfChart();
+                }
+            });
+            perfChart.addEventListener('mouseleave', function() {
+                perfHoverIdx = -1;
+                if (pagView && totalFrames > 0) perfFrameLabel.textContent = Math.round(pagView.getProgress() * totalFrames) + ' / ' + totalFrames;
+                drawPerfChart();
+            });
+        }
+
         function drawPerfChart() {
             if (!perfChart) return;
+            var cw = perfChart.clientWidth || 232;
+            var ch = perfChart.clientHeight || 48;
+            if (perfChart.width !== cw) perfChart.width = cw;
+            if (perfChart.height !== ch) perfChart.height = ch;
             var ctx = perfChart.getContext('2d');
             var w = perfChart.width, h = perfChart.height;
             ctx.clearRect(0, 0, w, h);
-            if (perfHistory.length === 0) return;
 
+            var targetMs = 16.7;
             var maxFlush = 33;
             for (var i = 0; i < perfHistory.length; i++) {
                 if (perfHistory[i].flush > maxFlush) maxFlush = perfHistory[i].flush;
             }
+            // Reference budget line (16.7ms)
+            var refY = Math.round(h - Math.min(h - 4, (targetMs / maxFlush) * (h - 4)));
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(0, refY);
+            ctx.lineTo(w, refY);
+            ctx.stroke();
+            ctx.restore();
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.font = '9px Consolas, monospace';
+            ctx.fillText('16.7ms', 2, Math.max(9, refY - 2));
+
+            if (perfHistory.length === 0) return;
             var barW = w / PERF_MAX_SAMPLES;
             var startX = w - perfHistory.length * barW;
             for (var j = 0; j < perfHistory.length; j++) {
                 var item = perfHistory[j];
                 var bh = Math.max(2, Math.min(h - 2, (item.flush / maxFlush) * (h - 4)));
-                ctx.fillStyle = item.flush <= 10 ? '#4CAF50' : (item.flush <= 20 ? '#FFC107' : '#F44336');
+                var c = item.flush <= 10 ? '#66bb6a' : (item.flush <= 20 ? '#ffca28' : '#ef5350');
+                ctx.fillStyle = j === perfHoverIdx ? '#ffffff' : c;
                 ctx.fillRect(startX + j * barW, h - bh, Math.max(1, barW - 1), bh);
             }
         }
 
         function updatePerfDisplay() {
-            var fpsColor = currentFps >= 50 ? '#4CAF50' : (currentFps >= 30 ? '#FFC107' : '#F44336');
-            var fpsEl = document.getElementById('fpsDisplay');
-            if (fpsEl) {
-                fpsEl.textContent = currentFps + ' FPS';
-                fpsEl.style.color = fpsColor;
-            }
-
             var barColor;
-            if (currentFlushTime <= 10) barColor = '#4CAF50';
-            else if (currentFlushTime <= 20) barColor = '#FFC107';
-            else barColor = '#F44336';
+            if (currentFlushTime <= 10) barColor = '#66bb6a';
+            else if (currentFlushTime <= 20) barColor = '#ffca28';
+            else barColor = '#ef5350';
             progressFill.style.background = barColor;
 
             perfHistory.push({ fps: currentFps, flush: currentFlushTime });
@@ -683,13 +996,20 @@
                     sumFlush += s.flush; if (s.flush > maxFlush) maxFlush = s.flush;
                 }
                 var n = perfHistory.length;
-                document.getElementById('pFpsCur').textContent = currentFps;
+                var fpsColor = currentFps >= 50 ? '#66bb6a' : (currentFps >= 30 ? '#ffca28' : '#ef5350');
+                var maxColor = maxFlush <= 10 ? '#66bb6a' : (maxFlush <= 20 ? '#ffca28' : '#ef5350');
+                if (perfDot) { perfDot.style.background = barColor; perfDot.style.boxShadow = '0 0 4px ' + barColor; }
+
+                var fpsCurEl = document.getElementById('pFpsCur');
+                var flushCurEl = document.getElementById('pFlushCur');
+                var flushMaxEl = document.getElementById('pFlushMax');
+                fpsCurEl.textContent = currentFps; fpsCurEl.style.color = fpsColor;
                 document.getElementById('pFpsAvg').textContent = T('PERF_Avg') + ' ' + Math.round(sumFps / n);
                 document.getElementById('pFpsMin').textContent = T('PERF_Min') + ' ' + (minFps === 999 ? 0 : minFps);
-                document.getElementById('pFlushCur').textContent = currentFlushTime.toFixed(1) + 'ms';
+                flushCurEl.textContent = currentFlushTime.toFixed(1) + 'ms'; flushCurEl.style.color = barColor;
                 document.getElementById('pFlushAvg').textContent = T('PERF_Avg') + ' ' + (sumFlush / n).toFixed(1);
-                document.getElementById('pFlushMax').textContent = T('PERF_Max') + ' ' + maxFlush.toFixed(1);
-                if (pagView && totalFrames > 0) {
+                flushMaxEl.textContent = T('PERF_Max') + ' ' + maxFlush.toFixed(1); flushMaxEl.style.color = maxColor;
+                if (perfHoverIdx < 0 && pagView && totalFrames > 0) {
                     var cf = Math.round(pagView.getProgress() * totalFrames);
                     perfFrameLabel.textContent = cf + ' / ' + totalFrames;
                 }
@@ -766,7 +1086,7 @@
             }
         });
 
-        // --- Capture current frame with transparent background ---
+        // --- Capture current frame with native WebGL alpha channel ---
         function captureCanvas() {
             if (!pagView || !pagFile) return null;
             if (typeof pagView.flush === 'function') pagView.flush();
@@ -776,16 +1096,6 @@
             tmp.height = canvas.height;
             var ctx = tmp.getContext('2d');
             ctx.drawImage(canvas, 0, 0);
-
-            // Remove black background
-            var imageData = ctx.getImageData(0, 0, tmp.width, tmp.height);
-            var data = imageData.data;
-            for (var i = 0; i < data.length; i += 4) {
-                if (data[i] < 10 && data[i+1] < 10 && data[i+2] < 10) {
-                    data[i+3] = 0;
-                }
-            }
-            ctx.putImageData(imageData, 0, 0);
             return tmp;
         }
 
@@ -859,6 +1169,8 @@
         document.addEventListener('click', function(e) {
             if (!colorPicker.contains(e.target) && e.target !== btnBg && !btnBg.contains(e.target))
                 colorPicker.classList.remove('show');
+            if (optsMenu && !optsMenu.contains(e.target) && e.target !== btnOpts && !btnOpts.contains(e.target))
+                optsMenu.classList.remove('show');
         });
 
         if (bgIndex < 0) { bgLayer.className = ''; bgLayer.style.background = customBgColor; }
@@ -868,16 +1180,15 @@
         function showControls() {
             controls.classList.remove('hidden');
             topBar.classList.remove('hidden');
-            infoEl.classList.add('show');
             resetHideTimer();
         }
         function hideControls() {
-            if (isDragging || perfDrag.active || metaPinned || structVisible) return;
+            if (isDragging || perfDrag.active || perfResize.mode || structResize.active || metaPinned || structVisible) return;
             controls.classList.add('hidden');
             topBar.classList.add('hidden');
-            infoEl.classList.remove('show');
             volumeLayer.classList.remove('show');
             colorPicker.classList.remove('show');
+            if (optsMenu) optsMenu.classList.remove('show');
         }
         function resetHideTimer() {
             if (hideTimer) clearTimeout(hideTimer);
@@ -1023,10 +1334,10 @@
                 pagFile = await pag.PAGFile.load(ab);
                 if (!pagFile) { statusEl.textContent=T('STATUS_InvalidFile'); return; }
 
-                duration = pagFile.duration();
+                origDuration = pagFile.duration();
+                duration = origDuration;
                 pagWidth = pagFile.width();
                 pagHeight = pagFile.height();
-                infoEl.innerHTML = pagWidth + '\u00d7' + pagHeight + '<br><span id="fpsDisplay">0 FPS</span>';
                 canvas.width = pagWidth; canvas.height = pagHeight;
 
                 // Collect metadata
@@ -1045,12 +1356,10 @@
                     fileSize: fileSize
                 };
                 totalFrames = Math.round(duration / 1000000 * pagMeta.fps);
-                infoEl.innerHTML = pagWidth + '\u00d7' + pagHeight + ' (' + totalFrames + 'f)<br><span id="fpsDisplay">0 FPS</span>';
                 log('Meta: ' + JSON.stringify(pagMeta));
                 perfHistory = [];
                 selectedLayer = null;
                 refreshStructureTree();
-                renderInspector(null);
 
                 // Force preserveDrawingBuffer and alpha for frame capture
                 var origGetContext = canvas.getContext.bind(canvas);
@@ -1069,6 +1378,8 @@
                 if (!pagView) { statusEl.textContent=T('STATUS_CreateView'); return; }
                 pagView.setRepeatCount(0);
                 applyVolume();
+                renderPagMarkers();
+                syncPagOptsUI();
 
                 pagView.addListener('onAnimationUpdate', function() {
                     if (!isDragging && pagView) updateProgress(pagView.getProgress());
@@ -1099,11 +1410,18 @@
             }
         }
 
+        function getCurFrame(p) {
+            if (pagFile && typeof pagFile.currentFrame === 'function') {
+                try { return pagFile.currentFrame(); } catch (e) {}
+            }
+            return Math.round(p * totalFrames);
+        }
+
         function updateProgress(p) {
             var pct = (p * 100).toFixed(2) + '%';
             progressFill.style.width = 'calc(' + pct + ' - 10px)';
             progressThumb.style.left = 'calc(' + pct + ')';
-            var currentFrame = Math.round(p * totalFrames);
+            var currentFrame = getCurFrame(p);
             timeEl.textContent = fmt(duration * p) + ' / ' + fmt(duration) + '  ' + currentFrame + '/' + totalFrames;
         }
 
@@ -1156,10 +1474,13 @@
         btnPrevFrame.addEventListener('click', function() { stepFrame(-1); });
         btnNextFrame.addEventListener('click', function() { stepFrame(1); });
 
-        // --- File Structure & Layer Inspector (independent side drawer) ---
+        // --- File Structure (Single Panel, Sortable, Double-Click Inline Edit) ---
         var structVisible = false;
         var selectedLayer = null;
         var layerNodeMap = [];
+        var structSort = { key: null, dir: 0 };
+        var structFilter = '';
+        var expandedEditId = null;
 
         function toggleStruct(forceOpen) {
             structVisible = typeof forceOpen === 'boolean' ? forceOpen : !structVisible;
@@ -1167,21 +1488,32 @@
             if (structPanel) structPanel.classList.toggle('show', structVisible);
         }
         if (btnStruct) btnStruct.addEventListener('click', function(e) { e.stopPropagation(); toggleStruct(); });
-
-        document.querySelectorAll('.struct-tab').forEach(function(tab) {
-            tab.addEventListener('click', function(e) {
-                e.stopPropagation();
-                document.querySelectorAll('.struct-tab').forEach(function(t) { t.classList.remove('active'); });
-                tab.classList.add('active');
-                var name = tab.dataset.tab;
-                if (structBody) structBody.style.display = name === 'tree' ? 'block' : 'none';
-                if (inspectorBody) inspectorBody.style.display = name === 'inspector' ? 'block' : 'none';
+        if (btnStructClose) btnStructClose.addEventListener('click', function(e) { e.stopPropagation(); toggleStruct(false); });
+        if (structSearch) {
+            structSearch.addEventListener('input', function() {
+                structFilter = structSearch.value.trim().toLowerCase();
+                refreshStructureTree();
             });
-        });
+            structSearch.addEventListener('click', function(e) { e.stopPropagation(); });
+        }
 
-        function switchStructTab(tabName) {
-            var target = document.querySelector('.struct-tab[data-tab="' + tabName + '"]');
-            if (target) target.click();
+        // Left-edge resize for structPanel
+        var structResize = { active: false, startX: 0, origW: 0 };
+        if (structResizeL) {
+            structResizeL.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                e.stopPropagation(); e.preventDefault();
+                structResize.active = true;
+                structResize.startX = e.clientX;
+                structResize.origW = structPanel.getBoundingClientRect().width;
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!structResize.active) return;
+                var maxW = Math.min(520, document.documentElement.clientWidth - 20);
+                var newW = Math.max(260, Math.min(maxW, structResize.origW + (structResize.startX - e.clientX)));
+                structPanel.style.width = newW + 'px';
+            });
+            document.addEventListener('mouseup', function() { structResize.active = false; });
         }
 
         function getLayerRawType(layer) {
@@ -1204,120 +1536,166 @@
             return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
-        function buildLayerHtml(layer, depth) {
-            var name = safeVal(layer, 'layerName') || T('INSP_Unnamed');
-            var typeName = getLayerTypeName(layer);
-            var nChildren = safeVal(layer, 'numChildren') || 0;
-            var editableIdx = safeVal(layer, 'editableIndex');
-            var id = layerNodeMap.length;
-            layerNodeMap.push(layer);
-
-            var badge = typeName + (editableIdx != null && editableIdx >= 0 ? ' #' + editableIdx : '');
-            var toggleChar = nChildren > 0 ? '&#x25BE;' : '&#x2022;';
-            var html = '<div class="tree-node" data-node-id="' + id + '">';
-            html += '<div class="tree-row" data-node-id="' + id + '">';
-            html += '<span class="tree-toggle">' + toggleChar + '</span>';
-            html += '<span class="tree-badge">' + escapeHtml(badge) + '</span>';
-            html += '<span class="tree-label" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</span>';
-            html += '</div>';
-
-            if (nChildren > 0) {
-                html += '<div class="tree-children">';
-                for (var i = 0; i < nChildren; i++) {
-                    var child = layer.getLayerAt(i);
-                    if (child) html += buildLayerHtml(child, depth + 1);
-                }
-                html += '</div>';
-            }
-            html += '</div>';
-            return html;
-        }
-
-        function refreshStructureTree() {
-            if (!structBody || !pagFile) return;
-            layerNodeMap = [];
-            var sm = safeVal(pagFile, 'timeStretchMode');
-            var html = '<div class="tree-node">';
-            html += '<div class="tree-row"><span class="tree-toggle">&#x25BE;</span><span class="tree-badge">' + escapeHtml(T('TREE_File')) + '</span><span class="tree-label">' + escapeHtml(T('TREE_Root')) + '</span></div>';
-            html += '<div class="tree-children">';
-            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_TimeStretch')) + '</span><span>' + escapeHtml(getStretchModeText(sm)) + '</span></div>';
-            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_Duration')) + '</span><span>' + totalFrames + 'f (' + (duration / 1000000).toFixed(2) + 's)</span></div>';
-            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_FPS')) + '</span><span>' + (pagMeta ? pagMeta.fps : '-') + '</span></div>';
-            html += '<div class="tree-prop"><span>' + escapeHtml(T('TREE_Size')) + '</span><span>' + pagWidth + ' × ' + pagHeight + '</span></div>';
-            html += '<div class="tree-prop"><span>' + escapeHtml(T('META_TagLevel')) + '</span><span>' + (pagMeta && pagMeta.tagLevel != null ? pagMeta.tagLevel : '-') + '</span></div>';
-            html += '<div class="tree-prop"><span>' + escapeHtml(T('TREE_VideosLayers')) + '</span><span>' + (pagMeta && pagMeta.numVideos != null ? pagMeta.numVideos : '-') + ' / ' + (pagMeta && pagMeta.numLayers != null ? pagMeta.numLayers : '-') + '</span></div>';
-            var n = safeVal(pagFile, 'numChildren') || 0;
-            for (var i = 0; i < n; i++) {
-                var child = pagFile.getLayerAt(i);
-                if (child) html += buildLayerHtml(child, 0);
-            }
-            html += '</div></div>';
-            structBody.innerHTML = html;
-
-            structBody.querySelectorAll('.tree-row[data-node-id]').forEach(function(row) {
-                row.addEventListener('click', function(e) {
-                    var id = parseInt(row.dataset.nodeId, 10);
-                    var node = row.parentElement;
-                    var childrenEl = node.querySelector(':scope > .tree-children');
-                    if (e.target.classList.contains('tree-toggle') && childrenEl) {
-                        var collapsed = childrenEl.classList.toggle('collapsed');
-                        e.target.innerHTML = collapsed ? '&#x25B8;' : '&#x25BE;';
-                        return;
-                    }
-                    structBody.querySelectorAll('.tree-row.selected').forEach(function(r) { r.classList.remove('selected'); });
-                    row.classList.add('selected');
-                    selectedLayer = layerNodeMap[id] || null;
-                    renderInspector(selectedLayer);
-                });
+        function updateHeaderSortUI() {
+            var cols = [
+                { el: colName, k: 'name', label: T('COL_Name') },
+                { el: colType, k: 'type', label: T('COL_Type') },
+                { el: colDur, k: 'dur', label: T('COL_Duration') },
+                { el: colSize, k: 'size', label: T('COL_SizeOrIdx') }
+            ];
+            cols.forEach(function(c) {
+                if (!c.el) return;
+                var isSorted = structSort.key === c.k && structSort.dir !== 0;
+                c.el.classList.toggle('sorted', isSorted);
+                c.el.textContent = c.label + (isSorted ? (structSort.dir > 0 ? ' ▲' : ' ▼') : '');
             });
         }
 
-        function renderInspector(layer) {
-            if (!inspectorBody) return;
-            if (!layer) {
-                inspectorBody.innerHTML = '<div class="insp-empty">' + T('INSP_Empty') + '</div>';
-                return;
+        document.querySelectorAll('.struct-col[data-sort]').forEach(function(col) {
+            col.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var k = col.dataset.sort;
+                if (structSort.key !== k) { structSort.key = k; structSort.dir = 1; }
+                else if (structSort.dir === 1) structSort.dir = -1;
+                else { structSort.key = null; structSort.dir = 0; }
+                refreshStructureTree();
+            });
+        });
+
+        function collectLayers(comp, depth, out) {
+            var n = safeVal(comp, 'numChildren') || 0;
+            for (var i = 0; i < n; i++) {
+                var layer = comp.getLayerAt(i);
+                if (!layer) continue;
+                var rawType = getLayerRawType(layer);
+                var name = safeVal(layer, 'layerName') || T('INSP_Unnamed');
+                var dur = safeVal(layer, 'duration') || 0;
+                var st = safeVal(layer, 'startTime') || 0;
+                var editableIdx = safeVal(layer, 'editableIndex');
+                var b = safeVal(layer, 'getBounds');
+                var bw = b ? Math.round((b.right || 0) - (b.left || 0)) : 0;
+                var bh = b ? Math.round((b.bottom || 0) - (b.top || 0)) : 0;
+                out.push({
+                    id: out.length,
+                    layer: layer,
+                    depth: depth,
+                    name: name,
+                    rawType: rawType,
+                    typeName: getLayerTypeName(layer),
+                    dur: dur,
+                    st: st,
+                    editableIdx: editableIdx,
+                    w: bw,
+                    h: bh,
+                    area: bw * bh
+                });
+                if (typeof layer.numChildren === 'function') collectLayers(layer, depth + 1, out);
             }
-            var rawType = getLayerRawType(layer);
-            var typeName = getLayerTypeName(layer);
-            var name = safeVal(layer, 'layerName') || T('INSP_Unnamed');
-            var st = safeVal(layer, 'startTime');
-            var dur = safeVal(layer, 'duration');
-            var alpha = safeVal(layer, 'alpha');
-            var visible = safeVal(layer, 'visible');
-            var editableIdx = safeVal(layer, 'editableIndex');
-            var visibleText = visible === true ? T('BOOL_True') : (visible === false ? T('BOOL_False') : '-');
+        }
 
-            var html = ''
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Name')) + '</span><span class="v" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</span></div>'
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Type')) + '</span><span class="v">' + escapeHtml(typeName) + '</span></div>'
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_StartTime')) + '</span><span class="v">' + (st != null ? (st / 1000000).toFixed(2) + 's' : '-') + '</span></div>'
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Duration')) + '</span><span class="v">' + (dur != null ? (dur / 1000000).toFixed(2) + 's' : '-') + '</span></div>'
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Alpha')) + '</span><span class="v">' + (alpha != null ? alpha.toFixed(2) : '-') + '</span></div>'
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_Visible')) + '</span><span class="v">' + escapeHtml(visibleText) + '</span></div>'
-                + '<div class="insp-row"><span class="k">' + escapeHtml(T('INSP_EditableIndex')) + '</span><span class="v">' + (editableIdx != null ? editableIdx : '-') + '</span></div>';
+        function getLayerTypeClass(rawType) {
+            var map = { 1: 't-nul', 2: 't-sld', 3: 't-txt', 4: 't-shp', 5: 't-img', 6: 't-pre' };
+            return map[rawType] || '';
+        }
 
-            if (rawType === 3 && editableIdx != null && editableIdx >= 0 && pagFile) {
-                var textDoc = null;
-                try { textDoc = pagFile.getTextData(editableIdx); } catch (e) {}
-                var curText = textDoc && textDoc.text ? textDoc.text : '';
-                html += '<div class="insp-edit"><input type="text" id="inspTextInput" value="' + escapeHtml(curText) + '">'
-                    + '<button class="insp-btn" id="btnApplyText">' + T('INSP_ApplyText') + '</button></div>';
-            } else if (rawType === 5 && editableIdx != null && editableIdx >= 0 && pagFile) {
-                html += '<div class="insp-edit"><input type="file" id="inspImgInput" accept="image/*" style="display:none">'
-                    + '<button class="insp-btn" id="btnReplaceImg">' + T('INSP_ReplaceImage') + '</button></div>';
+        function showLayerFooter(item) {
+            if (!structFooter || !item) return;
+            var alpha = safeVal(item.layer, 'alpha');
+            var visible = safeVal(item.layer, 'visible');
+            var tags = [];
+            tags.push('<span class="sf-tag">' + escapeHtml(item.name) + '</span>');
+            tags.push('<span class="sf-tag">' + escapeHtml(item.typeName) + '</span>');
+            tags.push('<span class="sf-tag">' + (item.st / 1000000).toFixed(2) + 's~' + ((item.st + item.dur) / 1000000).toFixed(2) + 's</span>');
+            if (item.w > 0 && item.h > 0) tags.push('<span class="sf-tag">' + item.w + '×' + item.h + '</span>');
+            if (alpha != null) tags.push('<span class="sf-tag">α ' + alpha.toFixed(2) + '</span>');
+            if (visible != null) tags.push('<span class="sf-tag">' + escapeHtml(T('INSP_Visible')) + ': ' + escapeHtml(visible ? T('BOOL_True') : T('BOOL_False')) + '</span>');
+            if (item.editableIdx != null && item.editableIdx >= 0) tags.push('<span class="sf-tag">#' + item.editableIdx + '</span>');
+            structFooter.innerHTML = tags.join('');
+        }
+
+        function refreshStructureTree() {
+            updateHeaderSortUI();
+            if (!structBody || !pagFile) return;
+            layerNodeMap = [];
+            collectLayers(pagFile, 0, layerNodeMap);
+
+            var rows = layerNodeMap.slice();
+            if (structFilter) {
+                rows = rows.filter(function(r) {
+                    return r.name.toLowerCase().indexOf(structFilter) >= 0 || r.typeName.toLowerCase().indexOf(structFilter) >= 0;
+                });
+            }
+            var isSorted = (structSort.key && structSort.dir !== 0) || !!structFilter;
+            if (structSort.key && structSort.dir !== 0) {
+                var k = structSort.key, d = structSort.dir;
+                rows.sort(function(a, b) {
+                    if (k === 'name') return a.name.localeCompare(b.name) * d;
+                    if (k === 'type') return a.typeName.localeCompare(b.typeName) * d;
+                    if (k === 'dur') return (a.dur - b.dur) * d;
+                    if (k === 'size') return (a.area - b.area) * d;
+                    return 0;
+                });
             }
 
-            inspectorBody.innerHTML = html;
+            var html = '';
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                var indent = isSorted ? 0 : (r.depth * 12);
+                var guide = (!isSorted && r.depth > 0) ? '<span class="p-guide">&#x2514;</span>' : '';
+                var durStr = (r.dur / 1000000).toFixed(2) + 's';
+                var sizeOrIdx = (r.w > 0 && r.h > 0) ? (r.w + '×' + r.h) : '-';
+                if (r.editableIdx != null && r.editableIdx >= 0) sizeOrIdx = '#' + r.editableIdx + (r.w > 0 ? ' ' + r.w + '×' + r.h : '');
+                var isSel = selectedLayer === r.layer;
+                html += '<div class="p-row' + (isSel ? ' selected' : '') + '" data-row-id="' + r.id + '">'
+                    + '<div class="p-name" style="padding-left:' + indent + 'px" title="' + escapeHtml(r.name) + '">' + guide + '<span class="p-name-txt">' + escapeHtml(r.name) + '</span></div>'
+                    + '<div class="p-type ' + getLayerTypeClass(r.rawType) + '">' + escapeHtml(r.typeName) + '</div>'
+                    + '<div class="p-num">' + durStr + '</div>'
+                    + '<div class="p-num">' + escapeHtml(sizeOrIdx) + '</div>'
+                    + '</div>';
+                if (expandedEditId === r.id && r.editableIdx != null && r.editableIdx >= 0) {
+                    if (r.rawType === 3) {
+                        var td = null;
+                        try { td = pagFile.getTextData(r.editableIdx); } catch (e) {}
+                        var curText = td && td.text ? td.text : '';
+                        html += '<div class="p-inline-edit"><input type="text" id="inspTextInput" value="' + escapeHtml(curText) + '">'
+                            + '<button class="insp-btn" id="btnApplyText">' + T('INSP_ApplyText') + '</button></div>';
+                    } else if (r.rawType === 5) {
+                        html += '<div class="p-inline-edit"><input type="file" id="inspImgInput" accept="image/*" style="display:none">'
+                            + '<button class="insp-btn" id="btnReplaceImg">' + T('INSP_ReplaceImage') + '</button></div>';
+                    }
+                }
+            }
+            structBody.innerHTML = html;
 
+            structBody.querySelectorAll('.p-row').forEach(function(el) {
+                var rid = parseInt(el.dataset.rowId, 10);
+                var item = layerNodeMap[rid];
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectedLayer = item ? item.layer : null;
+                    showLayerFooter(item);
+                    refreshStructureTree();
+                });
+                el.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    if (!item || item.editableIdx == null || item.editableIdx < 0) return;
+                    selectedLayer = item.layer;
+                    expandedEditId = expandedEditId === rid ? null : rid;
+                    showLayerFooter(item);
+                    refreshStructureTree();
+                });
+            });
+
+            var curEditItem = expandedEditId != null ? layerNodeMap[expandedEditId] : null;
             var btnApplyText = document.getElementById('btnApplyText');
-            if (btnApplyText) {
-                btnApplyText.addEventListener('click', function() {
+            if (btnApplyText && curEditItem) {
+                btnApplyText.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     var val = document.getElementById('inspTextInput').value;
                     try {
-                        var td = pagFile.getTextData(editableIdx);
+                        var td = pagFile.getTextData(curEditItem.editableIdx);
                         td.text = val;
-                        pagFile.replaceText(editableIdx, td);
+                        pagFile.replaceText(curEditItem.editableIdx, td);
                         if (typeof pagView.flush === 'function') pagView.flush();
                         showToast(T('TOAST_TextUpdated'));
                     } catch (err) { log('replaceText failed: ' + err.message); }
@@ -1326,8 +1704,8 @@
 
             var btnReplaceImg = document.getElementById('btnReplaceImg');
             var inspImgInput = document.getElementById('inspImgInput');
-            if (btnReplaceImg && inspImgInput) {
-                btnReplaceImg.addEventListener('click', function() { inspImgInput.click(); });
+            if (btnReplaceImg && inspImgInput && curEditItem) {
+                btnReplaceImg.addEventListener('click', function(e) { e.stopPropagation(); inspImgInput.click(); });
                 inspImgInput.addEventListener('change', function() {
                     var file = inspImgInput.files && inspImgInput.files[0];
                     if (!file) return;
@@ -1335,7 +1713,7 @@
                     img.onload = async function() {
                         try {
                             var pagImg = await pag.PAGImage.fromSource(img);
-                            pagFile.replaceImage(editableIdx, pagImg);
+                            pagFile.replaceImage(curEditItem.editableIdx, pagImg);
                             if (typeof pagView.flush === 'function') pagView.flush();
                             showToast(T('TOAST_ImageUpdated'));
                         } catch (err) { log('replaceImage failed: ' + err.message); }
@@ -1356,8 +1734,9 @@
                 if (layers && layers.length > 0) {
                     var topLayer = layers[0];
                     selectedLayer = topLayer;
-                    renderInspector(topLayer);
-                    if (structVisible) switchStructTab('inspector');
+                    var matched = layerNodeMap.find(function(x) { return x.layer === topLayer; });
+                    if (matched) showLayerFooter(matched);
+                    if (structVisible) refreshStructureTree();
                     else showToast((safeVal(topLayer, 'layerName') || T('INSP_Unnamed')) + ' (' + getLayerTypeName(topLayer) + ')');
                 }
             } catch (err) {}
@@ -1371,6 +1750,153 @@
             else if (e.key === ' ') { e.preventDefault(); btnPlay.click(); showControls(); }
             else if (e.key === 'l' || e.key === 'L') { e.preventDefault(); toggleMetaPanel(); showControls(); }
             else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleStruct(); showControls(); }
+        });
+
+        // --- Render & Debug Options + Markers ---
+        function renderPagMarkers() {
+            if (!progressMarkers || !pagFile || duration <= 0) return;
+            progressMarkers.innerHTML = '';
+            var allMarkers = [];
+            function collectMarkers(layer) {
+                if (typeof layer.markers === 'function') {
+                    try {
+                        var ms = layer.markers();
+                        if (ms && ms.length) {
+                            for (var i = 0; i < ms.length; i++) allMarkers.push(ms[i]);
+                        }
+                    } catch (e) {}
+                }
+                if (typeof layer.numChildren === 'function') {
+                    var n = layer.numChildren();
+                    for (var j = 0; j < n; j++) collectMarkers(layer.getLayerAt(j));
+                }
+            }
+            collectMarkers(pagFile);
+            allMarkers.forEach(function(m) {
+                var st = m.startTime || 0;
+                var p = Math.max(0, Math.min(1, st / duration));
+                var el = document.createElement('div');
+                el.className = 'prog-marker';
+                el.style.left = (p * 100).toFixed(2) + '%';
+                el.title = (m.comment || 'Marker') + ' (' + (st / 1000000).toFixed(2) + 's)';
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (pagView) {
+                        pagView.setProgress(p);
+                        if (typeof pagView.flush === 'function') pagView.flush();
+                        updateProgress(p);
+                    }
+                });
+                progressMarkers.appendChild(el);
+            });
+        }
+
+        function setPillGroup(id, val) {
+            var grp = document.getElementById(id);
+            if (!grp) return;
+            grp.querySelectorAll('.opt-pill').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.val === String(val));
+            });
+        }
+
+        function syncPagOptsUI() {
+            if (!pagView || !pagFile) return;
+            var chkC = document.getElementById('chkCache');
+            var chkV = document.getElementById('chkVideo');
+            if (chkC && typeof pagView.cacheEnabled === 'function') chkC.checked = pagView.cacheEnabled();
+            if (chkV && typeof pagView.videoEnabled === 'function') chkV.checked = pagView.videoEnabled();
+            if (typeof pagView.cacheScale === 'function') setPillGroup('grpCacheScale', pagView.cacheScale());
+            if (typeof pagView.scaleMode === 'function') setPillGroup('grpScaleMode', pagView.scaleMode());
+            if (typeof pagFile.timeStretchMode === 'function') setPillGroup('grpStretch', pagFile.timeStretchMode());
+        }
+
+        if (btnOpts) {
+            btnOpts.addEventListener('click', function(e) {
+                e.stopPropagation();
+                colorPicker.classList.remove('show');
+                optsMenu.classList.toggle('show');
+                if (optsMenu.classList.contains('show')) syncPagOptsUI();
+            });
+        }
+        var chkCache = document.getElementById('chkCache');
+        if (chkCache) chkCache.addEventListener('change', function() {
+            if (pagView && typeof pagView.setCacheEnabled === 'function') pagView.setCacheEnabled(chkCache.checked);
+        });
+        var chkVideo = document.getElementById('chkVideo');
+        if (chkVideo) chkVideo.addEventListener('change', function() {
+            if (pagView && typeof pagView.setVideoEnabled === 'function') pagView.setVideoEnabled(chkVideo.checked);
+        });
+        document.querySelectorAll('#grpCacheScale .opt-pill').forEach(function(b) {
+            b.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var v = parseFloat(b.dataset.val);
+                if (pagView && typeof pagView.setCacheScale === 'function') pagView.setCacheScale(v);
+                setPillGroup('grpCacheScale', v);
+            });
+        });
+        document.querySelectorAll('#grpMaxFps .opt-pill').forEach(function(b) {
+            b.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var v = parseInt(b.dataset.val, 10);
+                if (pagView && typeof pagView.setMaxFrameRate === 'function') pagView.setMaxFrameRate(v > 0 ? v : 60);
+                setPillGroup('grpMaxFps', v);
+            });
+        });
+        document.querySelectorAll('#grpSpeed .opt-pill').forEach(function(b) {
+            b.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var spd = parseFloat(b.dataset.val);
+                if (pagFile && origDuration > 0 && typeof pagFile.setDuration === 'function') {
+                    duration = Math.round(origDuration / spd);
+                    pagFile.setDuration(duration);
+                    if (pagView && typeof pagView.flush === 'function') pagView.flush();
+                }
+                setPillGroup('grpSpeed', spd);
+            });
+        });
+        document.querySelectorAll('#grpScaleMode .opt-pill').forEach(function(b) {
+            b.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var m = parseInt(b.dataset.val, 10);
+                if (pagView && typeof pagView.setScaleMode === 'function') {
+                    var wrap = document.getElementById('canvasWrap');
+                    var dpr = window.devicePixelRatio || 1;
+                    if (m === 0) {
+                        canvas.style.width = '';
+                        canvas.style.height = '';
+                        canvas.width = pagWidth;
+                        canvas.height = pagHeight;
+                    } else if (wrap) {
+                        canvas.style.width = '100%';
+                        canvas.style.height = '100%';
+                        canvas.width = Math.max(1, Math.round(wrap.clientWidth * dpr));
+                        canvas.height = Math.max(1, Math.round(wrap.clientHeight * dpr));
+                    }
+                    if (typeof pagView.updateSize === 'function') pagView.updateSize();
+                    pagView.setScaleMode(m);
+                    if (typeof pagView.flush === 'function') pagView.flush();
+                }
+                setPillGroup('grpScaleMode', m);
+            });
+        });
+        document.querySelectorAll('#grpStretch .opt-pill').forEach(function(b) {
+            b.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var m = parseInt(b.dataset.val, 10);
+                if (pagFile && typeof pagFile.setTimeStretchMode === 'function') {
+                    pagFile.setTimeStretchMode(m);
+                    if (pagMeta) { pagMeta.timeStretchMode = m; updateMetaPanel(); }
+                }
+                setPillGroup('grpStretch', m);
+            });
+        });
+        var btnFreeCache = document.getElementById('btnFreeCache');
+        if (btnFreeCache) btnFreeCache.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (pagView && typeof pagView.freeCache === 'function') {
+                pagView.freeCache();
+                showToast(T('TOAST_CacheFreed'));
+            }
         });
 
         // --- Messages from C# ---

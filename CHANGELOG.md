@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-25
+
+### Added
+- Render & Debug options menu (`#btnOpts`): `setCacheEnabled`, `setVideoEnabled`, `setCacheScale`, `setMaxFrameRate`, playback speed (`setDuration`), `setScaleMode` (None/Fit/Zoom/Fill), `setTimeStretchMode`, and `freeCache()`
+- AE timeline markers (`markers()`) rendered on progress bar with hover tooltips and click-to-seek
+- Single-panel File Structure table with sortable column headers (`Name`, `Type`, `Duration`, `Size / Idx`), live name/type filter, semantic type badges, hierarchy guides, left-edge resize, and double-click inline editing
+- Performance profiler enhancements: top-left/edge resize with safe bounds, frame budget reference line (`16.7ms`), bar hover readout, status dot & colored metrics, hover backdrop, double-click header reset, and one-click summary copy
+
+### Changed
+- Removed top-left `#info` overlay (consolidated into bottom-right Info & Performance panel)
+- Restored native monochrome gray/white accent styling and full bilingual i18n across all menus and panels
+- Exact current frame index via `currentFrame()`
+- Fixed `setScaleMode` canvas sizing (`updateSize`) and native WebGL alpha PNG capture (removed black-pixel threshold stripping)
+- Raised control bar `z-index` above profiler overlay to prevent overlap
+
 ## [1.3.0] - 2026-11-25
 
 ### Added
