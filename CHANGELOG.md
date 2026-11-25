@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-11-25
+
+### Changed
+- Unified monochrome spinning Loading indicator and localized initial loading text in `PagViewerPanel.xaml(.cs)`
+
 ## [1.3.1] - 2026-11-25
 
 ### Added

@@ -44,6 +44,8 @@ namespace QuickLook.Plugin.PagViewer
             }
 
             InitializeComponent();
+            var isZh = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh";
+            TxtStatus.Text = isZh ? "加载中..." : "Loading...";
             _webView = WebView;
 
             Loaded += OnLoaded;
@@ -136,7 +138,7 @@ namespace QuickLook.Plugin.PagViewer
                 }
                 else if (type == "loaded")
                 {
-                    Dispatcher.Invoke(() => TxtStatus.Visibility = Visibility.Collapsed);
+                    Dispatcher.Invoke(() => LoadingPanel.Visibility = Visibility.Collapsed);
                 }
                 else if (type == "error")
                 {
@@ -304,9 +306,11 @@ namespace QuickLook.Plugin.PagViewer
 
         private void ShowError(string message)
         {
+            LoadingSpinner.Visibility = Visibility.Collapsed;
             TxtStatus.Text = message;
             TxtStatus.Foreground = new SolidColorBrush(Colors.OrangeRed);
             TxtStatus.Visibility = Visibility.Visible;
+            LoadingPanel.Visibility = Visibility.Visible;
         }
 
         private static Button CreateDownloadButton()
